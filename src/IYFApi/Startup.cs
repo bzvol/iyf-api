@@ -45,7 +45,7 @@ public class Startup
         }
         else
         {
-            app.UseExceptionHandler(ExceptionHandler);
+            app.UseExceptionHandler(ExceptionHandling.ExceptionHandler);
             app.UseHsts();
         }
 
@@ -56,25 +56,5 @@ public class Startup
         app.UseAuthorization();
 
         app.UseEndpoints(endpoints => endpoints.MapControllers());
-    }
-
-    private static void ExceptionHandler(IApplicationBuilder app)
-    {
-        app.Run(async context =>
-        {
-            context.Response.StatusCode = 500;
-            context.Response.ContentType = MediaTypeNames.Application.Json;
-
-            var exceptionHandlerPathFeature =
-                context.Features.Get<IExceptionHandlerPathFeature>();
-            var exception = exceptionHandlerPathFeature?.Error;
-
-            var result = JsonSerializer.Serialize(new
-            {
-                exception?.Message, exception?.StackTrace
-            });
-
-            await context.Response.WriteAsync(result);
-        });
     }
 }
