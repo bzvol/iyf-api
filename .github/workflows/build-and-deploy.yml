@@ -1,0 +1,38 @@
+﻿name: Build & Deploy to AWS Lambda
+run-name: Build & Deploy - ${{ github.event.head_commit.message }} (${{ github.sha }})
+
+on: workflow_dispatch
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 7.0
+
+      - name: Install Amazon Lambda Tools
+        run: dotnet tool install -g Amazon.Lambda.Tools
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release
+
+      - name: Deploy
+        run: |
+          cd src/IYFApi
+          dotnet lambda deploy-serverless iyf-api \
+          --disable-interactive \
+          --region eu-central-1 \
+          --s3-bucket iyf-api \
+          --aws-access-key-id ${{ secrets.AWS_ACCESS_KEY_ID }} \
+          --aws-secret-key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          
