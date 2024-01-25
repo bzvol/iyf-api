@@ -12,10 +12,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: 7.0
+#      .NET is already installed on the GitHub-hosted runner
+#      - name: Setup .NET Core
+#        uses: actions/setup-dotnet@v3
+#        with:
+#          dotnet-version: 7.0
 
       - name: Install Amazon Lambda Tools
         run: dotnet tool install -g Amazon.Lambda.Tools
@@ -25,12 +26,16 @@ jobs:
 
       - name: Build
         run: dotnet build --configuration Release
+        
+#      Test project does not yet exist
+#      - name: Test
+#        run: dotnet test --no-build --verbosity normal
 
       - name: Deploy
         run: |
           cd src/IYFApi
           dotnet lambda deploy-serverless iyf-api \
-          --disable-interactive \
+          --disable-interactive True \
           --region eu-central-1 \
           --s3-bucket iyf-api \
           --aws-access-key-id ${{ secrets.AWS_ACCESS_KEY_ID }} \
