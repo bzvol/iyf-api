@@ -1,5 +1,4 @@
 ﻿name: Build & Deploy to AWS Lambda
-run-name: Build & Deploy - ${{ github.event.head_commit.message }} (${{ github.sha }})
 
 on: workflow_dispatch
 
