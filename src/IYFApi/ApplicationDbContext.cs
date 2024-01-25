@@ -1,4 +1,5 @@
-﻿using IYFApi.Models;
+﻿using IYFApi.Exceptions;
+using IYFApi.Models;
 using IYFApi.Models.Types;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -35,7 +36,7 @@ public class ApplicationDbContext : DbContext
     
     private static string GetConnectionString() =>
         Environment.GetEnvironmentVariable("IYF_DB_CONNECTION_STRING")
-        ?? throw new InvalidOperationException("Cannot find connection string");
+        ?? throw new ConfigurationException("Cannot find connection string!");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

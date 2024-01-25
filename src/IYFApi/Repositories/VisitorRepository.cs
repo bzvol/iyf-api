@@ -7,7 +7,7 @@ namespace IYFApi.Repositories;
 public class VisitorRepository : IVisitorRepository
 {
     private readonly ApplicationDbContext _context;
-    
+
     public VisitorRepository(ApplicationDbContext context)
     {
         _context = context;
@@ -16,7 +16,7 @@ public class VisitorRepository : IVisitorRepository
     public IEnumerable<EventVisitor> GetVisitorsForEvent(ulong eventId)
     {
         var eventEntity = _context.Events.Find(eventId);
-        if (eventEntity == null) throw new KeyNotFoundException(NoEventFoundMessage(eventId));
+        if (eventEntity == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(eventId));
 
         return from visitor in _context.EventVisitors
             where visitor.EventId == eventId
@@ -26,7 +26,7 @@ public class VisitorRepository : IVisitorRepository
     public EventVisitor CreateVisitor(ulong eventId, CreateVisitorRequest value)
     {
         var eventEntity = _context.Events.Find(eventId);
-        if (eventEntity == null) throw new KeyNotFoundException(NoEventFoundMessage(eventId));
+        if (eventEntity == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(eventId));
 
         var visitor = _context.EventVisitors.Add(new EventVisitor
         {
@@ -53,10 +53,10 @@ public class VisitorRepository : IVisitorRepository
         visitor.Age = value.Age;
         visitor.City = value.City;
         visitor.Source = value.Source;
-        
+
         var updatedVisitor = _context.EventVisitors.Update(visitor);
         _context.SaveChanges();
-        
+
         return updatedVisitor.Entity;
     }
 
@@ -67,13 +67,10 @@ public class VisitorRepository : IVisitorRepository
 
         var deletedVisitor = _context.EventVisitors.Remove(visitor);
         _context.SaveChanges();
-        
+
         return deletedVisitor.Entity;
     }
-    
-    private static string NoEventFoundMessage(ulong? id) =>
-        "The specified event " + (id.HasValue ? $"({id}) " : "") + "could not be found.";
-    
+
     private static string NoVisitorFoundMessage(ulong? id) =>
         "The specified visitor " + (id.HasValue ? $"({id}) " : "") + "could not be found.";
 }

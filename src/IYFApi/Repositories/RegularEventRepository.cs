@@ -17,7 +17,7 @@ public class RegularEventRepository : IRegularEventRepository
     public IEnumerable<RegularEvent> GetAllEvents() => _context.RegularEvents;
 
     public RegularEvent GetEvent(ulong id) => 
-        _context.RegularEvents.Find(id) ?? throw new KeyNotFoundException(NoEventFoundMessage(id));
+        _context.RegularEvents.Find(id) ?? throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(id));
 
     public RegularEvent CreateEvent(CreateEventRequest value)
     {
@@ -33,7 +33,7 @@ public class RegularEventRepository : IRegularEventRepository
     public RegularEvent UpdateEvent(ulong id, UpdateEventRequest value)
     {
         var eventEntity = _context.RegularEvents.Find(id);
-        if (eventEntity == null) throw new KeyNotFoundException(NoEventFoundMessage(id));
+        if (eventEntity == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(id));
         
         eventEntity.Title = value.Title;
         eventEntity.Description = value.Description;
@@ -48,7 +48,7 @@ public class RegularEventRepository : IRegularEventRepository
     public RegularEvent? DeleteEvent(ulong id)
     {
         var eventEntity = _context.RegularEvents.Find(id);
-        if (eventEntity == null) throw new KeyNotFoundException(NoEventFoundMessage(id));
+        if (eventEntity == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(id));
         
         if (eventEntity.Status != Status.Draft)
             throw new InvalidOperationException("You may only delete draft events.");
@@ -57,7 +57,4 @@ public class RegularEventRepository : IRegularEventRepository
         _context.SaveChanges();
         return deletedEvent.Entity;
     }
-    
-    private static string NoEventFoundMessage(ulong? id) =>
-        "The specified event " + (id.HasValue ? $"({id}) " : "") + "could not be found.";
 }

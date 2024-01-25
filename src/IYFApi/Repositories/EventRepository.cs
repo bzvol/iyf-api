@@ -58,6 +58,6 @@ public class EventRepository : IEventRepository
         return deletedEvent.Entity;
     }
     
-    private static string NoEventFoundMessage(ulong? id) =>
+    public static string NoEventFoundMessage(ulong? id) =>
         "The specified event " + (id.HasValue ? $"({id}) " : "") + "could not be found.";
 }
