@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,14 +6,15 @@ namespace IYFApi.Models;
 
 [Table("event_visitors")]
 [Index("Id", Name = "id", IsUnique = true)]
-public partial class EventVisitor
+[Index("EventId", Name = "event_id")]
+public class EventVisitor
 {
     [Key]
     [Column("id")]
-    public ulong Id { get; set; }
+    public ulong Id { get; init; }
 
     [Column("event_id")]
-    public int EventId { get; set; }
+    public ulong EventId { get; init; }
 
     [Column("name")]
     [StringLength(255)]
@@ -28,6 +27,9 @@ public partial class EventVisitor
     [Column("phone")]
     [StringLength(30)]
     public string? Phone { get; set; }
+    
+    [Column("age")]
+    public int? Age { get; set; }
 
     [Column("city")]
     [StringLength(30)]
@@ -38,5 +40,5 @@ public partial class EventVisitor
     public string? Source { get; set; }
 
     [Column("added_at", TypeName = "timestamp")]
-    public DateTime AddedAt { get; set; }
+    public DateTime AddedAt { get; init; }
 }

@@ -1,50 +1,37 @@
 ﻿using IYFApi.Models;
-using IYFApi.Models.Types;
+using IYFApi.Models.Request;
+using IYFApi.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IYFApi.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/regular")]
 public class RegularEventsController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IRegularEventRepository _repository;
     
-    public RegularEventsController(ApplicationDbContext context)
+    public RegularEventsController(IRegularEventRepository repository)
     {
-        _context = context;
+        _repository = repository;
     }
-    
+
     [HttpGet]
-    public IEnumerable<RegularEvent> Get()
-    {
-        return _context.RegularEvents;
-    }
-    
+    public IEnumerable<RegularEvent> GetAllEvents() => _repository.GetAllEvents();
+
     [HttpGet("{id}")]
-    public RegularEvent? Get(ulong id)
+    public RegularEvent GetEvent(ulong id) => _repository.GetEvent(id);
+
+    [HttpPost]
+    public RegularEvent CreateEvent([FromBody] CreateEventRequest value)
     {
-        return _context.RegularEvents.Find(id);
+        var createdEvent = _repository.CreateEvent(value);
+        HttpContext.Response.StatusCode = 201;
+        return createdEvent;
     }
     
-    [HttpPost]
-    public RegularEvent Post([FromBody] RegularEvent value)
-    {
-        var eventEntry = _context.RegularEvents.Add(value);
-        _context.SaveChanges();
-        return eventEntry.Entity;
-    }
+    [HttpPut("{id}")]
+    public RegularEvent UpdateEvent(ulong id, [FromBody] UpdateEventRequest value) => _repository.UpdateEvent(id, value);
     
     [HttpDelete("{id}")]
-    public RegularEvent? Delete(ulong id)
-    {
-        var eventEntity = _context.RegularEvents.Find(id);
-        if (eventEntity == null) return null;
-        
-        if (eventEntity.Status != Status.Draft)
-            throw new InvalidOperationException("You may only delete draft events.");
-        
-        var deletedEvent = _context.RegularEvents.Remove(eventEntity);
-        _context.SaveChanges();
-        return deletedEvent.Entity;
-    }
+    public RegularEvent? DeleteEvent(ulong id) => _repository.DeleteEvent(id);
 }

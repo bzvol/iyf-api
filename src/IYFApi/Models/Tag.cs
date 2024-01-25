@@ -1,22 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 namespace IYFApi.Models;
 
 [Table("tags")]
-[Index("Id", Name = "id", IsUnique = true)]
-[Index("Name", Name = "name", IsUnique = true)]
-public partial class Tag
+[Index("Id", Name = "id")]
+[Index("Name", Name = "name")]
+public class Tag
 {
     [Key]
     [Column("id")]
-    public ulong Id { get; set; }
+    public ulong Id { get; init; }
 
     [Column("name")]
-    public string Name { get; set; } = null!;
-    
-    // public ICollection<PostsTag> PostsTags { get; set; } = new List<PostsTag>();
+    public string Name { get; init; } = null!;
 }

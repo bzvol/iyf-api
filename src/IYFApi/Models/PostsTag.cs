@@ -6,15 +6,15 @@ namespace IYFApi.Models;
 
 [PrimaryKey("PostId", "TagId")]
 [Table("posts_tags")]
-public partial class PostsTag
+public class PostsTag
 {
     [Key]
     [Column("post_id")]
-    public ulong PostId { get; set; }
-    public Post Post { get; set; } = null!;
+    public ulong PostId { get; init; }
+    public Post Post { get; init; } = null!;
 
     [Key]
     [Column("tag_id")]
-    public ulong TagId { get; set; }
-    public Tag Tag { get; set; } = null!;
+    public ulong TagId { get; init; }
+    public Tag Tag { get; init; } = null!;
 }

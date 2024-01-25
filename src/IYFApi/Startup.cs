@@ -1,8 +1,9 @@
-﻿using System.Net.Mime;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.EntityFrameworkCore;
+using IYFApi.Repositories;
+using IYFApi.Repositories.Interfaces;
+using IYFApi.Services;
+using IYFApi.Services.Interfaces;
 
 namespace IYFApi;
 
@@ -17,6 +18,8 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        AddDependencyInjection(services);
+        
         services.AddControllers()
             .AddJsonOptions(options =>
             {
@@ -28,6 +31,17 @@ public class Startup
 
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
+    }
+
+    private static void AddDependencyInjection(IServiceCollection services)
+    {
+        services.AddSingleton<IPostRepository, PostRepository>();
+        services.AddSingleton<IEventRepository, EventRepository>();
+        services.AddSingleton<IRegularEventRepository, RegularEventRepository>();
+        services.AddSingleton<IVisitorRepository, VisitorRepository>();
+        
+        services.AddSingleton<IDonationService, DonationService>();
+        services.AddSingleton<IAccessManagementService, AccessManagementService>();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

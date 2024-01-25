@@ -1,27 +1,19 @@
 ﻿using IYFApi.Models;
+using IYFApi.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace IYFApi.Controllers;
 
 [Route("api/[controller]")]
 public class TagsController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IPostRepository _repository;
     
-    public TagsController(ApplicationDbContext context)
+    public TagsController(IPostRepository repository)
     {
-        _context = context;
+        _repository = repository;
     }
-    
+
     [HttpGet("{id}/posts")]
-    public IEnumerable<Post> GetPosts(ulong id)
-    {
-        var tag = _context.Tags.Find(id);
-        if (tag == null) throw new KeyNotFoundException();
-        
-        return from pt in _context.PostsTags
-            where pt.TagId == tag.Id
-            select pt.Post;
-    }
+    public IEnumerable<Post> GetPosts(ulong id) => _repository.GetPostsForTag(id);
 }
