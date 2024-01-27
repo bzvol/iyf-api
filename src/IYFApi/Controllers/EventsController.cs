@@ -24,11 +24,10 @@ public class EventsController : ControllerBase
     public Event GetEvent(ulong id) => _repository.GetEvent(id);
 
     [HttpPost]
-    public Event CreateEvent([FromBody] CreateEventRequest value)
+    public CreatedAtActionResult CreateEvent([FromBody] CreateEventRequest value)
     {
-        var createdEvent = _repository.CreateEvent(value);
-        HttpContext.Response.StatusCode = 201;
-        return createdEvent;
+        var @event = _repository.CreateEvent(value);
+        return CreatedAtAction(nameof(GetEvent), new {id = @event.Id}, @event);
     }
 
     [HttpPut("{id}")]
@@ -41,8 +40,12 @@ public class EventsController : ControllerBase
     public IEnumerable<EventVisitor> GetVisitorsForEvent(ulong id) => _visitorRepository.GetVisitorsForEvent(id);
     
     [HttpPost("{id}/visitors")]
-    public EventVisitor CreateVisitor(ulong id, [FromBody] CreateVisitorRequest value) => _visitorRepository.CreateVisitor(id, value);
-    
+    public ObjectResult CreateVisitor(ulong id, [FromBody] CreateVisitorRequest value)
+    {
+        var visitor = _visitorRepository.CreateVisitor(id, value);
+        return StatusCode(201, visitor);
+    }
+
     [HttpPut("{id}/visitors/{visitorId}")]
     public EventVisitor UpdateVisitor(ulong visitorId, [FromBody] UpdateVisitorRequest value) => _visitorRepository.UpdateVisitor(visitorId, value);
     

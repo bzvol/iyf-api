@@ -15,8 +15,8 @@ public class VisitorRepository : IVisitorRepository
 
     public IEnumerable<EventVisitor> GetVisitorsForEvent(ulong eventId)
     {
-        var eventEntity = _context.Events.Find(eventId);
-        if (eventEntity == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(eventId));
+        var @event = _context.Events.Find(eventId);
+        if (@event == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(eventId));
 
         return from visitor in _context.EventVisitors
             where visitor.EventId == eventId
@@ -25,8 +25,8 @@ public class VisitorRepository : IVisitorRepository
 
     public EventVisitor CreateVisitor(ulong eventId, CreateVisitorRequest value)
     {
-        var eventEntity = _context.Events.Find(eventId);
-        if (eventEntity == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(eventId));
+        var @event = _context.Events.Find(eventId);
+        if (@event == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(eventId));
 
         var visitor = _context.EventVisitors.Add(new EventVisitor
         {

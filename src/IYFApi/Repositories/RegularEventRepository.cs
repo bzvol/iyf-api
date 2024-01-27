@@ -32,14 +32,14 @@ public class RegularEventRepository : IRegularEventRepository
 
     public RegularEvent UpdateEvent(ulong id, UpdateEventRequest value)
     {
-        var eventEntity = _context.RegularEvents.Find(id);
-        if (eventEntity == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(id));
+        var @event = _context.RegularEvents.Find(id);
+        if (@event == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(id));
         
-        eventEntity.Title = value.Title;
-        eventEntity.Description = value.Description;
-        eventEntity.Status = value.Status;
+        @event.Title = value.Title;
+        @event.Description = value.Description;
+        @event.Status = value.Status;
         
-        var updatedEvent = _context.RegularEvents.Update(eventEntity);
+        var updatedEvent = _context.RegularEvents.Update(@event);
         _context.SaveChanges();
         
         return updatedEvent.Entity;
@@ -47,13 +47,13 @@ public class RegularEventRepository : IRegularEventRepository
 
     public RegularEvent? DeleteEvent(ulong id)
     {
-        var eventEntity = _context.RegularEvents.Find(id);
-        if (eventEntity == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(id));
+        var @event = _context.RegularEvents.Find(id);
+        if (@event == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(id));
         
-        if (eventEntity.Status != Status.Draft)
+        if (@event.Status != Status.Draft)
             throw new InvalidOperationException("You may only delete draft events.");
         
-        var deletedEvent = _context.RegularEvents.Remove(eventEntity);
+        var deletedEvent = _context.RegularEvents.Remove(@event);
         _context.SaveChanges();
         return deletedEvent.Entity;
     }

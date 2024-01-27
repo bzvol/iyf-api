@@ -21,14 +21,13 @@ public class RegularEventsController : ControllerBase
     [HttpGet("{id}")]
     public RegularEvent GetEvent(ulong id) => _repository.GetEvent(id);
 
-    [HttpPost]
-    public RegularEvent CreateEvent([FromBody] CreateEventRequest value)
+    [HttpPost] 
+    public CreatedAtActionResult CreateEvent([FromBody] CreateEventRequest value)
     {
-        var createdEvent = _repository.CreateEvent(value);
-        HttpContext.Response.StatusCode = 201;
-        return createdEvent;
+        var @event = _repository.CreateEvent(value);
+        return CreatedAtAction(nameof(GetEvent), new {id = @event.Id}, @event);
     }
-    
+
     [HttpPut("{id}")]
     public RegularEvent UpdateEvent(ulong id, [FromBody] UpdateEventRequest value) => _repository.UpdateEvent(id, value);
     

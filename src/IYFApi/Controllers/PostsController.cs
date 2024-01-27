@@ -22,11 +22,10 @@ public class PostsController : ControllerBase
     public Post GetPost(ulong id) => _repository.GetPost(id);
 
     [HttpPost]
-    public Post CreatePost([FromBody] CreatePostRequest value)
+    public CreatedAtActionResult CreatePost([FromBody] CreatePostRequest value)
     {
         var post = _repository.CreatePost(value);
-        HttpContext.Response.StatusCode = 201;
-        return post;
+        return CreatedAtAction(nameof(GetPost), new {id = post.Id}, post);
     }
 
     [HttpPut("{id}")]

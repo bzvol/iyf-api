@@ -32,14 +32,14 @@ public class EventRepository : IEventRepository
 
     public Event UpdateEvent(ulong id, UpdateEventRequest value)
     {
-        var eventEntity = _context.Events.Find(id);
-        if (eventEntity == null) throw new KeyNotFoundException(NoEventFoundMessage(id));
+        var @event = _context.Events.Find(id);
+        if (@event == null) throw new KeyNotFoundException(NoEventFoundMessage(id));
         
-        eventEntity.Title = value.Title;
-        eventEntity.Description = value.Description;
-        eventEntity.Status = value.Status;
+        @event.Title = value.Title;
+        @event.Description = value.Description;
+        @event.Status = value.Status;
         
-        var updatedEvent = _context.Events.Update(eventEntity);
+        var updatedEvent = _context.Events.Update(@event);
         _context.SaveChanges();
         
         return updatedEvent.Entity;
@@ -47,13 +47,13 @@ public class EventRepository : IEventRepository
 
     public Event? DeleteEvent(ulong id)
     {
-        var eventEntity = _context.Events.Find(id);
-        if (eventEntity == null) throw new KeyNotFoundException(NoEventFoundMessage(id));
+        var @event = _context.Events.Find(id);
+        if (@event == null) throw new KeyNotFoundException(NoEventFoundMessage(id));
         
-        if (eventEntity.Status != Status.Draft)
+        if (@event.Status != Status.Draft)
             throw new InvalidOperationException("You may only delete draft events.");
         
-        var deletedEvent = _context.Events.Remove(eventEntity);
+        var deletedEvent = _context.Events.Remove(@event);
         _context.SaveChanges();
         return deletedEvent.Entity;
     }
