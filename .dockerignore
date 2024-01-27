@@ -1,0 +1,6 @@
+.idea/
+.github/
+.git/
+/src/IYFApi/bin/
+/src/IYFApi/obj/
+/src/IYFApi/Readme.md
