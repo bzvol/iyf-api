@@ -1,5 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using IYFApi.Repositories;
 using IYFApi.Repositories.Interfaces;
 using IYFApi.Services;
@@ -20,6 +22,12 @@ public class Startup
     {
         AddDependencyInjection(services);
         
+        services.Configure<RouteOptions>(options =>
+        {
+            options.LowercaseUrls = true;
+            options.LowercaseQueryStrings = true;
+        });
+        
         services.AddControllers()
             .AddJsonOptions(options =>
             {
@@ -28,6 +36,12 @@ public class Startup
             });
 
         services.AddDbContext<ApplicationDbContext>();
+
+        FirebaseApp.Create(new AppOptions
+        {
+            Credential = GoogleCredential.GetApplicationDefault(),
+            ProjectId = "iyfhu-caaf9"
+        });
 
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();

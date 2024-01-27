@@ -1,4 +1,5 @@
-﻿using IYFApi.Models;
+﻿using IYFApi.Filters;
+using IYFApi.Models;
 using IYFApi.Models.Request;
 using IYFApi.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +10,7 @@ namespace IYFApi.Controllers;
 public class RegularEventsController : ControllerBase
 {
     private readonly IRegularEventRepository _repository;
-    
+
     public RegularEventsController(IRegularEventRepository repository)
     {
         _repository = repository;
@@ -21,16 +22,20 @@ public class RegularEventsController : ControllerBase
     [HttpGet("{id}")]
     public RegularEvent GetEvent(ulong id) => _repository.GetEvent(id);
 
-    [HttpPost] 
-    public CreatedAtActionResult CreateEvent([FromBody] CreateEventRequest value)
+    [HttpPost]
+    [AdminAuthorizationFilter(AdminRole.ContentManager)]
+    public IActionResult CreateEvent([FromBody] CreateEventRequest value)
     {
         var @event = _repository.CreateEvent(value);
-        return CreatedAtAction(nameof(GetEvent), new {id = @event.Id}, @event);
+        return CreatedAtAction(nameof(GetEvent), new { id = @event.Id }, @event);
     }
 
     [HttpPut("{id}")]
-    public RegularEvent UpdateEvent(ulong id, [FromBody] UpdateEventRequest value) => _repository.UpdateEvent(id, value);
-    
+    [AdminAuthorizationFilter(AdminRole.ContentManager)]
+    public RegularEvent UpdateEvent(ulong id, [FromBody] UpdateEventRequest value) =>
+        _repository.UpdateEvent(id, value);
+
     [HttpDelete("{id}")]
+    [AdminAuthorizationFilter(AdminRole.ContentManager)]
     public RegularEvent? DeleteEvent(ulong id) => _repository.DeleteEvent(id);
 }
