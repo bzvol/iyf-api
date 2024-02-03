@@ -14,6 +14,7 @@
   </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Amazon.Lambda.AspNetCoreServer" Version="8.1.0" />
+        <PackageReference Include="AWSSDK.SecretsManager" Version="3.7.302.21" />
         <PackageReference Include="FirebaseAdmin" Version="2.4.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.15">
           <PrivateAssets>all</PrivateAssets>
