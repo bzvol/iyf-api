@@ -32,6 +32,10 @@ public class Startup
             options.LowercaseQueryStrings = true;
         });
 
+        services.AddCors(options =>
+            options.AddDefaultPolicy(policy => policy.WithOrigins(
+                "http://localhost:5000", "https://iyf.hu", "https://admin.iyf.hu")));
+
         services.AddControllers()
             .AddJsonOptions(options =>
             {
@@ -64,9 +68,9 @@ public class Startup
 
     private static GoogleCredential LoadFirebaseCredentials()
     {
-        if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
-            return GoogleCredential.FromFile("~/iyfhu-firebase-adminsdk.json");
-        
+        if (Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS_FILE") != null)
+            return GoogleCredential.FromFile(Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS_FILE"));
+
         var config = new AmazonSecretsManagerConfig
             { RegionEndpoint = RegionEndpoint.GetBySystemName("eu-central-1") };
         var client = new AmazonSecretsManagerClient(config);
@@ -75,7 +79,7 @@ public class Startup
             { SecretId = Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS_SECRET_NAME") };
         var response = client.GetSecretValueAsync(request).Result;
         var secret = response.SecretString;
-        
+
         if (string.IsNullOrEmpty(secret)) throw new ConfigurationException("Firebase credentials not found");
 
         return GoogleCredential.FromJson(secret);
@@ -105,6 +109,8 @@ public class Startup
         app.UseHttpsRedirection();
 
         app.UseRouting();
+
+        app.UseCors();
 
         app.UseAuthorization();
 
