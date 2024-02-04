@@ -60,7 +60,7 @@ public class Startup
         services.AddSingleton<IPostRepository, PostRepository>();
         services.AddSingleton<IEventRepository, EventRepository>();
         services.AddSingleton<IRegularEventRepository, RegularEventRepository>();
-        services.AddSingleton<IVisitorRepository, VisitorRepository>();
+        services.AddSingleton<IGuestRepository, GuestRepository>();
 
         services.AddSingleton<IDonationService, DonationService>();
         services.AddSingleton<IAccessManagementService, AccessManagementService>();

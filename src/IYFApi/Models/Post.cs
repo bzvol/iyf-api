@@ -17,8 +17,8 @@ public class Post
     [StringLength(255)]
     public string Title { get; set; } = null!;
 
-    [Column("body", TypeName = "text")]
-    public string Body { get; set; } = null!;
+    [Column("content", TypeName = "text")]
+    public string Content { get; set; } = null!;
 
     [Column("status", TypeName = "enum('draft','published','archived')")]
     public Status Status { get; set; } = Status.Draft;

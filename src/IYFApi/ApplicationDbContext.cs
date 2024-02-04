@@ -25,7 +25,7 @@ public class ApplicationDbContext : DbContext
 
     public virtual DbSet<Event> Events { get; set; } = null!;
 
-    public virtual DbSet<EventVisitor> EventVisitors { get; set; } = null!;
+    public virtual DbSet<EventGuest> EventGuests { get; set; } = null!;
 
     public virtual DbSet<RegularEvent> RegularEvents { get; set; } = null!;
 
@@ -81,7 +81,7 @@ public class ApplicationDbContext : DbContext
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
 
-        modelBuilder.Entity<EventVisitor>(entity =>
+        modelBuilder.Entity<EventGuest>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 

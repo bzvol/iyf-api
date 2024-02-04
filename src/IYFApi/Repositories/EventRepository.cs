@@ -24,7 +24,7 @@ public class EventRepository : IEventRepository
         var eventEntry = _context.Events.Add(new Event
         {
             Title = value.Title,
-            Description = value.Description,
+            Details = value.Details,
         });
         _context.SaveChanges();
         return eventEntry.Entity;
@@ -36,7 +36,7 @@ public class EventRepository : IEventRepository
         if (@event == null) throw new KeyNotFoundException(NoEventFoundMessage(id));
         
         @event.Title = value.Title;
-        @event.Description = value.Description;
+        @event.Details = value.Details;
         @event.Status = value.Status;
         
         var updatedEvent = _context.Events.Update(@event);

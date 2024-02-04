@@ -17,8 +17,8 @@ public class Event
     [StringLength(255)]
     public string Title { get; set; } = null!;
 
-    [Column("description", TypeName = "text")]
-    public string Description { get; set; } = null!;
+    [Column("details", TypeName = "text")]
+    public string Details { get; set; } = null!;
 
     [Column("status", TypeName = "enum('draft','published','archived')")]
     public Status Status { get; set; } = Status.Draft;

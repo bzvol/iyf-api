@@ -24,7 +24,7 @@ public class RegularEventRepository : IRegularEventRepository
         var eventEntry = _context.RegularEvents.Add(new RegularEvent
         {
             Title = value.Title,
-            Description = value.Description,
+            Details = value.Details,
         });
         _context.SaveChanges();
         return eventEntry.Entity;
@@ -36,7 +36,7 @@ public class RegularEventRepository : IRegularEventRepository
         if (@event == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(id));
         
         @event.Title = value.Title;
-        @event.Description = value.Description;
+        @event.Details = value.Details;
         @event.Status = value.Status;
         
         var updatedEvent = _context.RegularEvents.Update(@event);

@@ -29,7 +29,7 @@ public class PostRepository : IPostRepository
         var post = _context.Posts.Add(new Post
         {
             Title = value.Title,
-            Body = value.Body,
+            Content = value.Content,
         });
         _context.SaveChanges();
         return post.Entity;
@@ -41,7 +41,7 @@ public class PostRepository : IPostRepository
         if (post == null) throw new KeyNotFoundException(NoPostFoundMessage(id));
 
         post.Title = value.Title;
-        post.Body = value.Body;
+        post.Content = value.Content;
         post.Status = value.Status;
 
         var updatedPost = _context.Posts.Update(post);

@@ -10,12 +10,12 @@ namespace IYFApi.Controllers;
 public class EventsController : ControllerBase
 {
     private readonly IEventRepository _repository;
-    private readonly IVisitorRepository _visitorRepository;
+    private readonly IGuestRepository _guestRepository;
 
-    public EventsController(IEventRepository repository, IVisitorRepository visitorRepository)
+    public EventsController(IEventRepository repository, IGuestRepository guestRepository)
     {
         _repository = repository;
-        _visitorRepository = visitorRepository;
+        _guestRepository = guestRepository;
     }
 
     [HttpGet]
@@ -40,25 +40,25 @@ public class EventsController : ControllerBase
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
     public Event? DeleteEvent(ulong id) => _repository.DeleteEvent(id);
 
-    [HttpGet("{id}/visitors")]
+    [HttpGet("{id}/guests")]
     [AdminAuthorizationFilter(AdminRole.GuestManager)]
-    public IEnumerable<EventVisitor> GetVisitorsForEvent(ulong id) => _visitorRepository.GetVisitorsForEvent(id);
+    public IEnumerable<EventGuest> GetGuestsForEvent(ulong id) => _guestRepository.GetGuestsForEvent(id);
 
-    [HttpPost("{id}/visitors")]
+    [HttpPost("{id}/guests")]
     // Creating a guest will be done by the guest itself,
     // with the form on an event's page.
-    public IActionResult CreateVisitor(ulong id, [FromBody] CreateVisitorRequest value)
+    public IActionResult CreateGuest(ulong id, [FromBody] CreateGuestRequest value)
     {
-        var visitor = _visitorRepository.CreateVisitor(id, value);
-        return StatusCode(201, visitor);
+        var guest = _guestRepository.CreateGuest(id, value);
+        return StatusCode(201, guest);
     }
 
-    [HttpPut("{id}/visitors/{visitorId}")]
+    [HttpPut("{id}/guests/{guestId}")]
     [AdminAuthorizationFilter(AdminRole.GuestManager)]
-    public EventVisitor UpdateVisitor(ulong visitorId, [FromBody] UpdateVisitorRequest value) =>
-        _visitorRepository.UpdateVisitor(visitorId, value);
+    public EventGuest UpdateGuest(ulong guestId, [FromBody] UpdateGuestRequest value) =>
+        _guestRepository.UpdateGuest(guestId, value);
 
-    [HttpDelete("{id}/visitors/{visitorId}")]
+    [HttpDelete("{id}/guests/{guestId}")]
     [AdminAuthorizationFilter(AdminRole.GuestManager)]
-    public EventVisitor? DeleteVisitor(ulong visitorId) => _visitorRepository.DeleteVisitor(visitorId);
+    public EventGuest? DeleteGuest(ulong guestId) => _guestRepository.DeleteGuest(guestId);
 }

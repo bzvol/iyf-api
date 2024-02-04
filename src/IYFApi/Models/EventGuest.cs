@@ -4,10 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IYFApi.Models;
 
-[Table("event_visitors")]
+[Table("event_guests")]
 [Index("Id", Name = "id", IsUnique = true)]
 [Index("EventId", Name = "event_id")]
-public class EventVisitor
+public class EventGuest
 {
     [Key]
     [Column("id")]
