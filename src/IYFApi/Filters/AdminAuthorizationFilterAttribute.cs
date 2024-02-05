@@ -7,15 +7,8 @@ using Microsoft.Extensions.Primitives;
 namespace IYFApi.Filters;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-public class AdminAuthorizationFilterAttribute : Attribute, IAuthorizationFilter
+public class AdminAuthorizationFilterAttribute(AdminRole role) : Attribute, IAuthorizationFilter
 {
-    private readonly AdminRole _role;
-
-    public AdminAuthorizationFilterAttribute(AdminRole role)
-    {
-        _role = role;
-    }
-
     public async void OnAuthorization(AuthorizationFilterContext context)
     {
         var authHeader = context.HttpContext.Request.Headers
@@ -39,8 +32,8 @@ public class AdminAuthorizationFilterAttribute : Attribute, IAuthorizationFilter
             return;
         }
 
-        var authorized = (bool)decodedToken.Claims[GetRoleString(_role)];
-        if (!authorized) context.Result = UnauthorizedResult($"Missing required role: {_role}");
+        var authorized = (bool)decodedToken.Claims[GetRoleString(role)];
+        if (!authorized) context.Result = UnauthorizedResult($"Missing required role: {role}");
     }
 
 #pragma warning disable CS8524

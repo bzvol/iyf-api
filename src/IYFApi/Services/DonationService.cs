@@ -2,7 +2,4 @@
 
 namespace IYFApi.Services;
 
-public class DonationService : IDonationService
-{
-    
-}
+public class DonationService : IDonationService;

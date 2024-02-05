@@ -5,56 +5,49 @@ using IYFApi.Repositories.Interfaces;
 
 namespace IYFApi.Repositories;
 
-public class EventRepository : IEventRepository
+public class EventRepository(ApplicationDbContext context) : IEventRepository
 {
-    private readonly ApplicationDbContext _context;
-    
-    public EventRepository(ApplicationDbContext context)
-    {
-        _context = context;
-    }
-
-    public IEnumerable<Event> GetAllEvents() => _context.Events;
+    public IEnumerable<Event> GetAllEvents() => context.Events;
 
     public Event GetEvent(ulong id) => 
-        _context.Events.Find(id) ?? throw new KeyNotFoundException(NoEventFoundMessage(id));
+        context.Events.Find(id) ?? throw new KeyNotFoundException(NoEventFoundMessage(id));
 
     public Event CreateEvent(CreateEventRequest value)
     {
-        var eventEntry = _context.Events.Add(new Event
+        var eventEntry = context.Events.Add(new Event
         {
             Title = value.Title,
             Details = value.Details,
         });
-        _context.SaveChanges();
+        context.SaveChanges();
         return eventEntry.Entity;
     }
 
     public Event UpdateEvent(ulong id, UpdateEventRequest value)
     {
-        var @event = _context.Events.Find(id);
+        var @event = context.Events.Find(id);
         if (@event == null) throw new KeyNotFoundException(NoEventFoundMessage(id));
         
         @event.Title = value.Title;
         @event.Details = value.Details;
         @event.Status = value.Status;
         
-        var updatedEvent = _context.Events.Update(@event);
-        _context.SaveChanges();
+        var updatedEvent = context.Events.Update(@event);
+        context.SaveChanges();
         
         return updatedEvent.Entity;
     }
 
     public Event? DeleteEvent(ulong id)
     {
-        var @event = _context.Events.Find(id);
+        var @event = context.Events.Find(id);
         if (@event == null) throw new KeyNotFoundException(NoEventFoundMessage(id));
         
         if (@event.Status != Status.Draft)
             throw new InvalidOperationException("You may only delete draft events.");
         
-        var deletedEvent = _context.Events.Remove(@event);
-        _context.SaveChanges();
+        var deletedEvent = context.Events.Remove(@event);
+        context.SaveChanges();
         return deletedEvent.Entity;
     }
     

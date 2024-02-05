@@ -4,31 +4,24 @@ using IYFApi.Repositories.Interfaces;
 
 namespace IYFApi.Repositories;
 
-public class GuestRepository : IGuestRepository
+public class GuestRepository(ApplicationDbContext context) : IGuestRepository
 {
-    private readonly ApplicationDbContext _context;
-
-    public GuestRepository(ApplicationDbContext context)
-    {
-        _context = context;
-    }
-
     public IEnumerable<EventGuest> GetGuestsForEvent(ulong eventId)
     {
-        var @event = _context.Events.Find(eventId);
+        var @event = context.Events.Find(eventId);
         if (@event == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(eventId));
 
-        return from guest in _context.EventGuests
+        return from guest in context.EventGuests
             where guest.EventId == eventId
             select guest;
     }
 
     public EventGuest CreateGuest(ulong eventId, CreateGuestRequest value)
     {
-        var @event = _context.Events.Find(eventId);
+        var @event = context.Events.Find(eventId);
         if (@event == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(eventId));
 
-        var guest = _context.EventGuests.Add(new EventGuest
+        var guest = context.EventGuests.Add(new EventGuest
         {
             EventId = eventId,
             Name = value.Name,
@@ -38,13 +31,13 @@ public class GuestRepository : IGuestRepository
             City = value.City,
             Source = value.Source,
         });
-        _context.SaveChanges();
+        context.SaveChanges();
         return guest.Entity;
     }
 
     public EventGuest UpdateGuest(ulong guestId, UpdateGuestRequest value)
     {
-        var guest = _context.EventGuests.Find(guestId);
+        var guest = context.EventGuests.Find(guestId);
         if (guest == null) throw new KeyNotFoundException(NoGuestFoundMessage(guestId));
 
         guest.Name = value.Name;
@@ -54,19 +47,19 @@ public class GuestRepository : IGuestRepository
         guest.City = value.City;
         guest.Source = value.Source;
 
-        var updatedGuest = _context.EventGuests.Update(guest);
-        _context.SaveChanges();
+        var updatedGuest = context.EventGuests.Update(guest);
+        context.SaveChanges();
 
         return updatedGuest.Entity;
     }
 
     public EventGuest? DeleteGuest(ulong guestId)
     {
-        var guest = _context.EventGuests.Find(guestId);
+        var guest = context.EventGuests.Find(guestId);
         if (guest == null) throw new KeyNotFoundException(NoGuestFoundMessage(guestId));
 
-        var deletedGuest = _context.EventGuests.Remove(guest);
-        _context.SaveChanges();
+        var deletedGuest = context.EventGuests.Remove(guest);
+        context.SaveChanges();
 
         return deletedGuest.Entity;
     }
