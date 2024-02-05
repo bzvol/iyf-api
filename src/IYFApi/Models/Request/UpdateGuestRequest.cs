@@ -8,4 +8,5 @@ public class UpdateGuestRequest
     public int? Age { get; set; }
     public string? City { get; set; }
     public string? Source { get; set; }
+    public Dictionary<string, string> Custom { get; set; }
 }

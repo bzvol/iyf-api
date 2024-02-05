@@ -26,6 +26,8 @@ public class ApplicationDbContext : DbContext
     public virtual DbSet<Event> Events { get; set; } = null!;
 
     public virtual DbSet<EventGuest> EventGuests { get; set; } = null!;
+    
+    public virtual DbSet<EventCustomField> EventCustomFields { get; set; } = null!;
 
     public virtual DbSet<RegularEvent> RegularEvents { get; set; } = null!;
 
@@ -86,6 +88,11 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
             entity.Property(e => e.AddedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        });
+        
+        modelBuilder.Entity<EventCustomField>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
         });
 
         modelBuilder.Entity<RegularEvent>(entity =>
