@@ -18,6 +18,8 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
         {
             Title = value.Title,
             Details = value.Details,
+            Time = value.Time,
+            Location = value.Location,
         });
         context.SaveChanges();
         return eventEntry.Entity;
@@ -31,6 +33,8 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
         @event.Title = value.Title;
         @event.Details = value.Details;
         @event.Status = value.Status;
+        @event.Time = value.Time;
+        @event.Location = value.Location;
 
         var updatedEvent = context.RegularEvents.Update(@event);
         context.SaveChanges();

@@ -9,7 +9,7 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
 {
     public IEnumerable<Event> GetAllEvents() => context.Events;
 
-    public Event GetEvent(ulong id) => 
+    public Event GetEvent(ulong id) =>
         context.Events.Find(id) ?? throw new KeyNotFoundException(NoEventFoundMessage(id));
 
     public Event CreateEvent(CreateEventRequest value)
@@ -18,6 +18,9 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
         {
             Title = value.Title,
             Details = value.Details,
+            StartTime = value.StartTime,
+            EndTime = value.EndTime,
+            Location = value.Location
         });
         context.SaveChanges();
         return eventEntry.Entity;
@@ -27,14 +30,17 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
     {
         var @event = context.Events.Find(id);
         if (@event == null) throw new KeyNotFoundException(NoEventFoundMessage(id));
-        
+
         @event.Title = value.Title;
         @event.Details = value.Details;
         @event.Status = value.Status;
-        
+        @event.StartTime = value.StartTime;
+        @event.EndTime = value.EndTime;
+        @event.Location = value.Location;
+
         var updatedEvent = context.Events.Update(@event);
         context.SaveChanges();
-        
+
         return updatedEvent.Entity;
     }
 
@@ -42,15 +48,15 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
     {
         var @event = context.Events.Find(id);
         if (@event == null) throw new KeyNotFoundException(NoEventFoundMessage(id));
-        
+
         if (@event.Status != Status.Draft)
             throw new InvalidOperationException("You may only delete draft events.");
-        
+
         var deletedEvent = context.Events.Remove(@event);
         context.SaveChanges();
         return deletedEvent.Entity;
     }
-    
+
     public static string NoEventFoundMessage(ulong? id) =>
         "The specified event " + (id.HasValue ? $"({id}) " : "") + "could not be found.";
 }
