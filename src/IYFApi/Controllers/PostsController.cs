@@ -1,7 +1,9 @@
 ﻿using IYFApi.Filters;
 using IYFApi.Models;
 using IYFApi.Models.Request;
+using IYFApi.Models.Response;
 using IYFApi.Repositories.Interfaces;
+using IYFApi.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IYFApi.Controllers;
@@ -10,33 +12,25 @@ namespace IYFApi.Controllers;
 public class PostsController(IPostRepository repository) : ControllerBase
 {
     [HttpGet]
-    public IEnumerable<Post> GetAllPosts() => repository.GetAllPosts();
+    public IEnumerable<PostResponse> GetAllPosts() => repository.GetAllPosts();
 
     [HttpGet("{id}")]
-    public Post GetPost(ulong id) => repository.GetPost(id);
+    public PostResponse GetPost(ulong id) => repository.GetPost(id);
 
     [HttpPost]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
-    public IActionResult CreatePost([FromBody] CreatePostRequest value)
+    public async Task<IActionResult> CreatePost([FromBody] CreatePostRequest value)
     {
-        var post = repository.CreatePost(value, this.GetUid());
+        var post = repository.CreatePost(value, await AuthService.GetUidFromRequest(Request));
         return CreatedAtAction(nameof(GetPost), new { id = post.Id }, post);
     }
 
     [HttpPut("{id}")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
-    public Post UpdatePost(ulong id, [FromBody] UpdatePostRequest value) =>
-        repository.UpdatePost(id, value, this.GetUid());
+    public async Task<PostResponse> UpdatePost(ulong id, [FromBody] UpdatePostRequest value) =>
+        repository.UpdatePost(id, value, await AuthService.GetUidFromRequest(Request));
 
     [HttpDelete("{id}")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
-    public Post? DeletePost(ulong id) => repository.DeletePost(id);
-
-    [HttpGet("{id}/tags")]
-    public IEnumerable<Tag> GetTagsForPost(ulong id) => repository.GetTagsForPost(id);
-
-    [HttpPut("{id}/tags")]
-    [AdminAuthorizationFilter(AdminRole.ContentManager)]
-    public IEnumerable<Tag> SetTagsForPost(ulong id, [FromBody] IEnumerable<string> tags) =>
-        repository.SetTagsForPost(id, tags);
+    public PostResponse DeletePost(ulong id) => repository.DeletePost(id);
 }

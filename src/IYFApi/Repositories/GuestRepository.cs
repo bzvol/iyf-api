@@ -61,7 +61,7 @@ public class GuestRepository(ApplicationDbContext context) : IGuestRepository
             City = guest.Entity.City,
             Source = guest.Entity.Source,
             Custom = customFields,
-            AddedAt = guest.Entity.AddedAt
+            CreatedAt = guest.Entity.CreatedAt
         };
 
         return response;
@@ -109,7 +109,7 @@ public class GuestRepository(ApplicationDbContext context) : IGuestRepository
             Custom = new Dictionary<string, string>(from cf in context.EventCustomFields
                 where cf.EventId == updatedGuest.Entity.EventId && cf.GuestId == updatedGuest.Entity.Id
                 select new KeyValuePair<string, string>(cf.FieldName, cf.FieldValue)),
-            AddedAt = updatedGuest.Entity.AddedAt
+            CreatedAt = updatedGuest.Entity.CreatedAt
         };
 
         return response;

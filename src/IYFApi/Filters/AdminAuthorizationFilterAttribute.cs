@@ -39,9 +39,9 @@ public class AdminAuthorizationFilterAttribute(AdminRole role) : Attribute, IAut
 #pragma warning disable CS8524
     private static string GetRoleString(AdminRole role) => role switch
     {
-        AdminRole.ContentManager => "content_manager",
-        AdminRole.GuestManager => "guest_manager",
-        AdminRole.AccessManager => "access_manager"
+        AdminRole.ContentManager => "contentManager",
+        AdminRole.GuestManager => "guestManager",
+        AdminRole.AccessManager => "accessManager"
     };
 #pragma warning restore CS8524
 

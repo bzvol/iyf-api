@@ -1,5 +1,6 @@
 ﻿using IYFApi.Models;
 using IYFApi.Models.Request;
+using IYFApi.Models.Response;
 using IYFApi.Models.Types;
 using IYFApi.Repositories.Interfaces;
 
@@ -7,12 +8,15 @@ namespace IYFApi.Repositories;
 
 public class EventRepository(ApplicationDbContext context) : IEventRepository
 {
-    public IEnumerable<Event> GetAllEvents() => context.Events;
+    public IEnumerable<EventResponse> GetAllEvents() => context.Events.Select(ConvertToEventResponse);
 
-    public Event GetEvent(ulong id) =>
-        context.Events.Find(id) ?? throw new KeyNotFoundException(NoEventFoundMessage(id));
+    public EventResponse GetEvent(ulong id)
+    {
+        var @event = context.Events.Find(id) ?? throw new KeyNotFoundException(NoEventFoundMessage(id));
+        return ConvertToEventResponse(@event);
+    }
 
-    public Event CreateEvent(CreateEventRequest value, string userId)
+    public EventResponse CreateEvent(CreateEventRequest value, string userId)
     {
         var eventEntry = context.Events.Add(new Event
         {
@@ -24,10 +28,10 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
             CreatedBy = userId
         });
         context.SaveChanges();
-        return eventEntry.Entity;
+        return ConvertToEventResponse(eventEntry.Entity);
     }
 
-    public Event UpdateEvent(ulong id, UpdateEventRequest value, string userId)
+    public EventResponse UpdateEvent(ulong id, UpdateEventRequest value, string userId)
     {
         var @event = context.Events.Find(id);
         if (@event == null) throw new KeyNotFoundException(NoEventFoundMessage(id));
@@ -43,10 +47,10 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
         var updatedEvent = context.Events.Update(@event);
         context.SaveChanges();
 
-        return updatedEvent.Entity;
+        return ConvertToEventResponse(updatedEvent.Entity);
     }
 
-    public Event? DeleteEvent(ulong id)
+    public EventResponse DeleteEvent(ulong id)
     {
         var @event = context.Events.Find(id);
         if (@event == null) throw new KeyNotFoundException(NoEventFoundMessage(id));
@@ -56,8 +60,29 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
 
         var deletedEvent = context.Events.Remove(@event);
         context.SaveChanges();
-        return deletedEvent.Entity;
+        return ConvertToEventResponse(deletedEvent.Entity);
     }
+
+    private static EventResponse ConvertToEventResponse(Event @event) => new()
+    {
+        Id = @event.Id,
+        Title = @event.Title,
+        Details = @event.Details,
+        Schedule = new EventSchedule
+        {
+            StartTime = @event.StartTime,
+            EndTime = @event.EndTime,
+            Location = @event.Location
+        },
+        Status = @event.Status,
+        Metadata = new ObjectMetadata
+        {
+            CreatedAt = @event.CreatedAt,
+            CreatedBy = @event.CreatedBy,
+            UpdatedAt = @event.UpdatedAt,
+            UpdatedBy = @event.UpdatedBy
+        }
+    };
 
     public static string NoEventFoundMessage(ulong? id) =>
         "The specified event " + (id.HasValue ? $"({id}) " : "") + "could not be found.";

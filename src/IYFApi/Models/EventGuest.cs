@@ -39,6 +39,6 @@ public class EventGuest
     [StringLength(255)]
     public string? Source { get; set; }
 
-    [Column("added_at", TypeName = "timestamp")]
-    public DateTime AddedAt { get; init; }
+    [Column("created_at", TypeName = "timestamp")]
+    public DateTime CreatedAt { get; init; }
 }

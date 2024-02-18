@@ -1,7 +1,9 @@
 ﻿using IYFApi.Filters;
 using IYFApi.Models;
 using IYFApi.Models.Request;
+using IYFApi.Models.Response;
 using IYFApi.Repositories.Interfaces;
+using IYFApi.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IYFApi.Controllers;
@@ -11,27 +13,27 @@ public class EventsController(IEventRepository repository, IGuestRepository gues
     : ControllerBase
 {
     [HttpGet]
-    public IEnumerable<Event> GetAllEvents() => repository.GetAllEvents();
+    public IEnumerable<EventResponse> GetAllEvents() => repository.GetAllEvents();
 
     [HttpGet("{id}")]
-    public Event GetEvent(ulong id) => repository.GetEvent(id);
+    public EventResponse GetEvent(ulong id) => repository.GetEvent(id);
 
     [HttpPost]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
-    public IActionResult CreateEvent([FromBody] CreateEventRequest value)
+    public async Task<IActionResult> CreateEvent([FromBody] CreateEventRequest value)
     {
-        var @event = repository.CreateEvent(value, this.GetUid());
+        var @event = repository.CreateEvent(value, await AuthService.GetUidFromRequest(Request));
         return CreatedAtAction(nameof(GetEvent), new { id = @event.Id }, @event);
     }
 
     [HttpPut("{id}")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
-    public Event UpdateEvent(ulong id, [FromBody] UpdateEventRequest value) =>
-        repository.UpdateEvent(id, value, this.GetUid());
+    public async Task<EventResponse> UpdateEvent(ulong id, [FromBody] UpdateEventRequest value) =>
+        repository.UpdateEvent(id, value, await AuthService.GetUidFromRequest(Request));
 
     [HttpDelete("{id}")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
-    public Event? DeleteEvent(ulong id) => repository.DeleteEvent(id);
+    public EventResponse DeleteEvent(ulong id) => repository.DeleteEvent(id);
 
     [HttpGet("{id}/guests")]
     [AdminAuthorizationFilter(AdminRole.GuestManager)]

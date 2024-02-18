@@ -56,7 +56,7 @@ public class Startup
         services.AddSingleton<IGuestRepository, GuestRepository>();
 
         services.AddSingleton<IDonationService, DonationService>();
-        services.AddSingleton<IAccessManagementService, AccessManagementService>();
+        services.AddSingleton<IAuthService, AuthService>();
     }
 
     private static GoogleCredential LoadFirebaseCredentials()

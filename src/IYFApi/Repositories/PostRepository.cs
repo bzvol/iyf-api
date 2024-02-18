@@ -1,5 +1,6 @@
 ﻿using IYFApi.Models;
 using IYFApi.Models.Request;
+using IYFApi.Models.Response;
 using IYFApi.Models.Types;
 using IYFApi.Repositories.Interfaces;
 
@@ -7,17 +8,18 @@ namespace IYFApi.Repositories;
 
 public class PostRepository(ApplicationDbContext context) : IPostRepository
 {
-    public IEnumerable<Post> GetAllPosts()
+    public IEnumerable<PostResponse> GetAllPosts()
     {
-        return context.Posts;
+        return context.Posts.Select(ConvertToPostResponse);
     }
 
-    public Post GetPost(ulong id)
+    public PostResponse GetPost(ulong id)
     {
-        return context.Posts.Find(id) ?? throw new KeyNotFoundException(NoPostFoundMessage(id));
+        var post = context.Posts.Find(id) ?? throw new KeyNotFoundException(NoPostFoundMessage(id));
+        return ConvertToPostResponse(post);
     }
 
-    public Post CreatePost(CreatePostRequest value, string userId)
+    public PostResponse CreatePost(CreatePostRequest value, string userId)
     {
         var post = context.Posts.Add(new Post
         {
@@ -26,13 +28,15 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
             CreatedBy = userId
         });
         context.SaveChanges();
-        return post.Entity;
+        
+        SetTagsForPost(post.Entity.Id, value.Tags);
+        
+        return ConvertToPostResponse(post.Entity);
     }
 
-    public Post UpdatePost(ulong id, UpdatePostRequest value, string userId)
+    public PostResponse UpdatePost(ulong id, UpdatePostRequest value, string userId)
     {
-        var post = context.Posts.Find(id);
-        if (post == null) throw new KeyNotFoundException(NoPostFoundMessage(id));
+        var post = context.Posts.Find(id) ?? throw new KeyNotFoundException(NoPostFoundMessage(id));
 
         post.Title = value.Title;
         post.Content = value.Content;
@@ -41,37 +45,28 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
 
         var updatedPost = context.Posts.Update(post);
         context.SaveChanges();
+        
+        SetTagsForPost(updatedPost.Entity.Id, value.Tags);
 
-        return updatedPost.Entity;
+        return ConvertToPostResponse(updatedPost.Entity);
     }
 
-    public Post? DeletePost(ulong id)
+    public PostResponse DeletePost(ulong id)
     {
-        var post = context.Posts.Find(id);
-        if (post == null) throw new KeyNotFoundException(NoPostFoundMessage(id));
+        var post = context.Posts.Find(id) ?? throw new KeyNotFoundException(NoPostFoundMessage(id));
 
         if (post.Status != Status.Draft)
             throw new InvalidOperationException("You may only delete draft posts.");
 
         var deletedPost = context.Posts.Remove(post);
         context.SaveChanges();
-        return deletedPost.Entity;
+        
+        return ConvertToPostResponse(deletedPost.Entity);
     }
 
-    public IEnumerable<Tag> GetTagsForPost(ulong id)
+    private void SetTagsForPost(ulong id, IEnumerable<string> tags)
     {
-        var post = context.Posts.Find(id);
-        if (post == null) throw new KeyNotFoundException(NoPostFoundMessage(id));
-
-        return from pt in context.PostsTags
-            where pt.PostId == id
-            select pt.Tag;
-    }
-
-    public IEnumerable<Tag> SetTagsForPost(ulong id, IEnumerable<string> tags)
-    {
-        var post = context.Posts.Find(id);
-        if (post == null) throw new KeyNotFoundException(NoPostFoundMessage(id));
+        var post = context.Posts.Find(id) ?? throw new KeyNotFoundException(NoPostFoundMessage(id));
 
         context.PostsTags.RemoveRange(
             from pt in context.PostsTags
@@ -86,21 +81,25 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
         }
 
         context.SaveChanges();
-
-        return from pt in context.PostsTags
-            where pt.PostId == id
-            select pt.Tag;
     }
 
-    public IEnumerable<Post> GetPostsForTag(ulong tagId)
+    private PostResponse ConvertToPostResponse(Post post) => new()
     {
-        var tag = context.Tags.Find(tagId);
-        if (tag == null) throw new KeyNotFoundException();
+        Title = post.Title,
+        Content = post.Content,
+        Tags = from pt in context.PostsTags
+            where pt.PostId == post.Id
+            select pt.Tag.Name,
         
-        return from pt in context.PostsTags
-            where pt.TagId == tag.Id
-            select pt.Post;
-    }
+        Status = post.Status,
+        Metadata = new ObjectMetadata
+        {
+            CreatedAt = post.CreatedAt,
+            CreatedBy = post.CreatedBy,
+            UpdatedAt = post.UpdatedAt,
+            UpdatedBy = post.UpdatedBy
+        }
+    };
 
     private static string NoPostFoundMessage(ulong? id) =>
         "The specified post " + (id.HasValue ? $"({id}) " : "") + "could not be found.";
