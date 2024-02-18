@@ -1,6 +1,5 @@
 ﻿using IYFApi.Exceptions;
 using IYFApi.Models;
-using IYFApi.Models.Types;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 

@@ -1,4 +1,5 @@
 using FirebaseAdmin.Auth;
+using IYFApi.Models;
 using IYFApi.Models.Response;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;

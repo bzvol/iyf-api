@@ -1,7 +1,6 @@
 ﻿using IYFApi.Models;
 using IYFApi.Models.Request;
 using IYFApi.Models.Response;
-using IYFApi.Models.Types;
 using IYFApi.Repositories.Interfaces;
 
 namespace IYFApi.Repositories;
@@ -10,7 +9,7 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
 {
     public IEnumerable<PostResponse> GetAllPosts()
     {
-        return context.Posts.Select(ConvertToPostResponse);
+        return context.Posts.ToList().Select(ConvertToPostResponse);
     }
 
     public PostResponse GetPost(ulong id)

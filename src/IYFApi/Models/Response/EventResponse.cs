@@ -1,5 +1,3 @@
-using IYFApi.Models.Types;
-
 namespace IYFApi.Models.Response;
 
 public class EventResponse

@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using IYFApi.Models.Types;
 using Microsoft.EntityFrameworkCore;
 
 namespace IYFApi.Models;

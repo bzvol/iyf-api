@@ -61,8 +61,9 @@ public class Startup
 
     private static GoogleCredential LoadFirebaseCredentials()
     {
-        if (Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS_FILE") != null)
-            return GoogleCredential.FromFile(Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS_FILE"));
+        var firebaseCredentialsFile = Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS_FILE");
+        if (firebaseCredentialsFile != null)
+            return GoogleCredential.FromFile(firebaseCredentialsFile);
 
         var config = new AmazonSecretsManagerConfig
             { RegionEndpoint = RegionEndpoint.GetBySystemName("eu-central-1") };

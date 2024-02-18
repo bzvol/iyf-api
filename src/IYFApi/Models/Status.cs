@@ -1,4 +1,4 @@
-﻿namespace IYFApi.Models.Types;
+﻿namespace IYFApi.Models;
 
 public enum Status
 {

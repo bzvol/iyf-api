@@ -21,29 +21,43 @@ public class AuthService : IAuthService
         var isAdminByDefault = user.Email != null && user.Email.EndsWith("@iyf.hu") && user.EmailVerified;
         await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(uid, new Dictionary<string, object>
         {
-            {"admin", isAdminByDefault},
-            {"contentManager", false},
-            {"guestManager", false},
-            {"accessManager", false}
+            { "accessRequested", false },
+            { "admin", isAdminByDefault },
+            { "contentManager", false },
+            { "guestManager", false },
+            { "accessManager", false }
         });
     }
 
-    public Task RequestAccess(string uid)
+    public async Task RequestAccess(string uid)
     {
-        throw new NotImplementedException();
+        await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(uid, new Dictionary<string, object>
+        {
+            { "accessRequested", true }
+        });
+        
+        var managers = (await GetAllUsers())
+            .Where(u => 
+                u.CustomClaims.TryGetValue("accessManager", out var accessManager) && (bool)accessManager)
+            .Select(u => u.Email);
+        // TODO: Send emails
     }
 
-    public Task GrantAccess(string uid)
+    public async Task GrantAccess(string uid)
     {
-        throw new NotImplementedException();
+        await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(uid, new Dictionary<string, object>
+        {
+            { "accessRequested", false },
+            { "admin", true }
+        });
     }
-    
+
     public static async Task<string> GetUidFromRequest(HttpRequest request)
     {
         var authHeader = request.Headers.TryGetValue("Authorization", out var bearer);
         if (!authHeader || bearer == StringValues.Empty)
             throw new Exception("No authorization header found");
-        
+
         var token = bearer.ToString().Split(" ")[1];
         var decodedToken = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(token);
         return decodedToken.Uid;

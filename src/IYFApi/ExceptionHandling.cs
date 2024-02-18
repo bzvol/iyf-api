@@ -7,8 +7,13 @@ namespace IYFApi;
 
 public static class ExceptionHandling
 {
-    public static bool IsDevelopment { private get; set; } 
-    
+    public static bool IsDevelopment { private get; set; }
+
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
     public static void ExceptionHandler(IApplicationBuilder app) =>
         app.Run(async context =>
         {
@@ -28,8 +33,8 @@ public static class ExceptionHandling
                     : null,
                 StackTrace = IsDevelopment ? exception?.StackTrace : null
             };
-
-            await context.Response.WriteAsync(JsonSerializer.Serialize(result));
+            
+            await context.Response.WriteAsync(JsonSerializer.Serialize(result, JsonSerializerOptions));
         });
 
     private static int GetStatusCodeForException(Exception? exception) =>

@@ -1,6 +1,4 @@
-﻿using IYFApi.Models.Types;
-
-namespace IYFApi.Models.Request;
+﻿namespace IYFApi.Models.Request;
 
 public class UpdatePostRequest
 {

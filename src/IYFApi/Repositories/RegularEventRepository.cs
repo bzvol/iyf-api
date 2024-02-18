@@ -1,14 +1,13 @@
 ﻿using IYFApi.Models;
 using IYFApi.Models.Request;
 using IYFApi.Models.Response;
-using IYFApi.Models.Types;
 using IYFApi.Repositories.Interfaces;
 
 namespace IYFApi.Repositories;
 
 public class RegularEventRepository(ApplicationDbContext context) : IRegularEventRepository
 {
-    public IEnumerable<RegularEventResponse> GetAllEvents() => context.RegularEvents.Select(ConvertToResponseObject);
+    public IEnumerable<RegularEventResponse> GetAllEvents() => context.RegularEvents.ToList().Select(ConvertToResponseObject);
 
     public RegularEventResponse GetEvent(ulong id)
     {

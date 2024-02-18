@@ -1,4 +1,4 @@
-namespace IYFApi.Filters;
+namespace IYFApi.Models;
 
 public enum AdminRole
 {
