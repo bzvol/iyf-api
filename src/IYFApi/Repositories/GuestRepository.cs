@@ -34,18 +34,20 @@ public class GuestRepository(ApplicationDbContext context) : IGuestRepository
         });
 
         var customFields = new Dictionary<string, string>();
-        foreach (var kv in value.Custom)
-        {
-            var customField = context.EventCustomFields.Add(new EventCustomField
+
+        if (value.Custom != null)
+            foreach (var kv in value.Custom)
             {
-                EventId = eventId,
-                GuestId = guest.Entity.Id,
-                FieldName = kv.Key,
-                FieldValue = kv.Value,
-            });
-            customFields.Add(customField.Entity.FieldName, customField.Entity.FieldValue);
-        }
-        
+                var customField = context.EventCustomFields.Add(new EventCustomField
+                {
+                    EventId = eventId,
+                    GuestId = guest.Entity.Id,
+                    FieldName = kv.Key,
+                    FieldValue = kv.Value,
+                });
+                customFields.Add(customField.Entity.FieldName, customField.Entity.FieldValue);
+            }
+
         context.SaveChanges();
 
         var response = new GuestResponse
@@ -77,17 +79,19 @@ public class GuestRepository(ApplicationDbContext context) : IGuestRepository
         guest.City = value.City;
         guest.Source = value.Source;
 
-        foreach (var kv in value.Custom)
-        {
-            var customField = context.EventCustomFields.FirstOrDefault(cf =>
-                cf.EventId == guest.EventId && cf.GuestId == guest.Id && cf.FieldName == kv.Key);
-            if (customField == null) throw new KeyNotFoundException(
-                $"The specified custom field '{kv.Key}' could not be found for guest {guest.Id}.");
-            
-            customField.FieldValue = kv.Value;
-            
-            context.EventCustomFields.Update(customField);
-        }
+        if (value.Custom != null)
+            foreach (var kv in value.Custom)
+            {
+                var customField = context.EventCustomFields.FirstOrDefault(cf =>
+                    cf.EventId == guest.EventId && cf.GuestId == guest.Id && cf.FieldName == kv.Key);
+                if (customField == null)
+                    throw new KeyNotFoundException(
+                        $"The specified custom field '{kv.Key}' could not be found for guest {guest.Id}.");
+
+                customField.FieldValue = kv.Value;
+
+                context.EventCustomFields.Update(customField);
+            }
 
         var updatedGuest = context.EventGuests.Update(guest);
         context.SaveChanges();
