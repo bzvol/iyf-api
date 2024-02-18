@@ -7,35 +7,28 @@ using Microsoft.AspNetCore.Mvc;
 namespace IYFApi.Controllers;
 
 [Route("api/regular")]
-public class RegularEventsController : ControllerBase
+public class RegularEventsController(IRegularEventRepository repository) : ControllerBase
 {
-    private readonly IRegularEventRepository _repository;
-
-    public RegularEventsController(IRegularEventRepository repository)
-    {
-        _repository = repository;
-    }
-
     [HttpGet]
-    public IEnumerable<RegularEvent> GetAllEvents() => _repository.GetAllEvents();
+    public IEnumerable<RegularEvent> GetAllEvents() => repository.GetAllEvents();
 
     [HttpGet("{id}")]
-    public RegularEvent GetEvent(ulong id) => _repository.GetEvent(id);
+    public RegularEvent GetEvent(ulong id) => repository.GetEvent(id);
 
     [HttpPost]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
     public IActionResult CreateEvent([FromBody] CreateEventRequest value)
     {
-        var @event = _repository.CreateEvent(value);
+        var @event = repository.CreateEvent(value);
         return CreatedAtAction(nameof(GetEvent), new { id = @event.Id }, @event);
     }
 
     [HttpPut("{id}")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
     public RegularEvent UpdateEvent(ulong id, [FromBody] UpdateEventRequest value) =>
-        _repository.UpdateEvent(id, value);
+        repository.UpdateEvent(id, value);
 
     [HttpDelete("{id}")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
-    public RegularEvent? DeleteEvent(ulong id) => _repository.DeleteEvent(id);
+    public RegularEvent? DeleteEvent(ulong id) => repository.DeleteEvent(id);
 }

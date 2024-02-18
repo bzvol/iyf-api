@@ -5,15 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace IYFApi.Controllers;
 
 [Route("api/[controller]")]
-public class TagsController : ControllerBase
+public class TagsController(IPostRepository repository) : ControllerBase
 {
-    private readonly IPostRepository _repository;
-    
-    public TagsController(IPostRepository repository)
-    {
-        _repository = repository;
-    }
-
     [HttpGet("{id}/posts")]
-    public IEnumerable<Post> GetPosts(ulong id) => _repository.GetPostsForTag(id);
+    public IEnumerable<Post> GetPosts(ulong id) => repository.GetPostsForTag(id);
 }

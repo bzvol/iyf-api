@@ -7,42 +7,35 @@ using Microsoft.AspNetCore.Mvc;
 namespace IYFApi.Controllers;
 
 [Route("api/[controller]")]
-public class PostsController : ControllerBase
+public class PostsController(IPostRepository repository) : ControllerBase
 {
-    private readonly IPostRepository _repository;
-
-    public PostsController(IPostRepository repository)
-    {
-        _repository = repository;
-    }
-
     [HttpGet]
-    public IEnumerable<Post> GetAllPosts() => _repository.GetAllPosts();
+    public IEnumerable<Post> GetAllPosts() => repository.GetAllPosts();
 
     [HttpGet("{id}")]
-    public Post GetPost(ulong id) => _repository.GetPost(id);
+    public Post GetPost(ulong id) => repository.GetPost(id);
 
     [HttpPost]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
     public IActionResult CreatePost([FromBody] CreatePostRequest value)
     {
-        var post = _repository.CreatePost(value);
+        var post = repository.CreatePost(value);
         return CreatedAtAction(nameof(GetPost), new { id = post.Id }, post);
     }
 
     [HttpPut("{id}")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
-    public Post UpdatePost(ulong id, [FromBody] UpdatePostRequest value) => _repository.UpdatePost(id, value);
+    public Post UpdatePost(ulong id, [FromBody] UpdatePostRequest value) => repository.UpdatePost(id, value);
 
     [HttpDelete("{id}")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
-    public Post? DeletePost(ulong id) => _repository.DeletePost(id);
+    public Post? DeletePost(ulong id) => repository.DeletePost(id);
 
     [HttpGet("{id}/tags")]
-    public IEnumerable<Tag> GetTagsForPost(ulong id) => _repository.GetTagsForPost(id);
+    public IEnumerable<Tag> GetTagsForPost(ulong id) => repository.GetTagsForPost(id);
 
     [HttpPut("{id}/tags")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
     public IEnumerable<Tag> SetTagsForPost(ulong id, [FromBody] IEnumerable<string> tags) =>
-        _repository.SetTagsForPost(id, tags);
+        repository.SetTagsForPost(id, tags);
 }

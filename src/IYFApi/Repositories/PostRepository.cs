@@ -22,7 +22,7 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
         var post = context.Posts.Add(new Post
         {
             Title = value.Title,
-            Content = value.Content,
+            Content = value.Content
         });
         context.SaveChanges();
         return post.Entity;

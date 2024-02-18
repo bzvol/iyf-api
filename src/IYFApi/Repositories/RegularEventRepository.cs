@@ -19,7 +19,7 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
             Title = value.Title,
             Details = value.Details,
             Time = value.Time,
-            Location = value.Location,
+            Location = value.Location
         });
         context.SaveChanges();
         return eventEntry.Entity;

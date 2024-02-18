@@ -30,7 +30,7 @@ public class GuestRepository(ApplicationDbContext context) : IGuestRepository
             Phone = value.Phone,
             Age = value.Age,
             City = value.City,
-            Source = value.Source,
+            Source = value.Source
         });
 
         var customFields = new Dictionary<string, string>();
@@ -43,7 +43,7 @@ public class GuestRepository(ApplicationDbContext context) : IGuestRepository
                     EventId = eventId,
                     GuestId = guest.Entity.Id,
                     FieldName = kv.Key,
-                    FieldValue = kv.Value,
+                    FieldValue = kv.Value
                 });
                 customFields.Add(customField.Entity.FieldName, customField.Entity.FieldValue);
             }
@@ -61,7 +61,7 @@ public class GuestRepository(ApplicationDbContext context) : IGuestRepository
             City = guest.Entity.City,
             Source = guest.Entity.Source,
             Custom = customFields,
-            AddedAt = guest.Entity.AddedAt,
+            AddedAt = guest.Entity.AddedAt
         };
 
         return response;
@@ -109,7 +109,7 @@ public class GuestRepository(ApplicationDbContext context) : IGuestRepository
             Custom = new Dictionary<string, string>(from cf in context.EventCustomFields
                 where cf.EventId == updatedGuest.Entity.EventId && cf.GuestId == updatedGuest.Entity.Id
                 select new KeyValuePair<string, string>(cf.FieldName, cf.FieldValue)),
-            AddedAt = updatedGuest.Entity.AddedAt,
+            AddedAt = updatedGuest.Entity.AddedAt
         };
 
         return response;
