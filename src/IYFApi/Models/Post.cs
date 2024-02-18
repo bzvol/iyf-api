@@ -25,7 +25,15 @@ public class Post
 
     [Column("created_at", TypeName = "timestamp")]
     public DateTime CreatedAt { get; init; } = DateTime.Now;
+    
+    [Column("created_by")]
+    [StringLength(255)]
+    public string CreatedBy { get; init; } = null!;
 
     [Column("updated_at", TypeName = "timestamp")]
     public DateTime UpdatedAt { get; init; } = DateTime.Now;
+    
+    [Column("updated_by")]
+    [StringLength(255)]
+    public string UpdatedBy { get; set; } = null!;
 }

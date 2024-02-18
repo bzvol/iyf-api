@@ -19,13 +19,14 @@ public class PostsController(IPostRepository repository) : ControllerBase
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
     public IActionResult CreatePost([FromBody] CreatePostRequest value)
     {
-        var post = repository.CreatePost(value);
+        var post = repository.CreatePost(value, this.GetUid());
         return CreatedAtAction(nameof(GetPost), new { id = post.Id }, post);
     }
 
     [HttpPut("{id}")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
-    public Post UpdatePost(ulong id, [FromBody] UpdatePostRequest value) => repository.UpdatePost(id, value);
+    public Post UpdatePost(ulong id, [FromBody] UpdatePostRequest value) =>
+        repository.UpdatePost(id, value, this.GetUid());
 
     [HttpDelete("{id}")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]

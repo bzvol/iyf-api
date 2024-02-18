@@ -12,7 +12,7 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
     public Event GetEvent(ulong id) =>
         context.Events.Find(id) ?? throw new KeyNotFoundException(NoEventFoundMessage(id));
 
-    public Event CreateEvent(CreateEventRequest value)
+    public Event CreateEvent(CreateEventRequest value, string userId)
     {
         var eventEntry = context.Events.Add(new Event
         {
@@ -20,13 +20,14 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
             Details = value.Details,
             StartTime = value.StartTime,
             EndTime = value.EndTime,
-            Location = value.Location
+            Location = value.Location,
+            CreatedBy = userId
         });
         context.SaveChanges();
         return eventEntry.Entity;
     }
 
-    public Event UpdateEvent(ulong id, UpdateEventRequest value)
+    public Event UpdateEvent(ulong id, UpdateEventRequest value, string userId)
     {
         var @event = context.Events.Find(id);
         if (@event == null) throw new KeyNotFoundException(NoEventFoundMessage(id));
@@ -37,6 +38,7 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
         @event.StartTime = value.StartTime;
         @event.EndTime = value.EndTime;
         @event.Location = value.Location;
+        @event.UpdatedBy = userId;
 
         var updatedEvent = context.Events.Update(@event);
         context.SaveChanges();

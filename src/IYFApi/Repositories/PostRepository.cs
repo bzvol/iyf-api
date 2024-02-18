@@ -17,18 +17,19 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
         return context.Posts.Find(id) ?? throw new KeyNotFoundException(NoPostFoundMessage(id));
     }
 
-    public Post CreatePost(CreatePostRequest value)
+    public Post CreatePost(CreatePostRequest value, string userId)
     {
         var post = context.Posts.Add(new Post
         {
             Title = value.Title,
-            Content = value.Content
+            Content = value.Content,
+            CreatedBy = userId
         });
         context.SaveChanges();
         return post.Entity;
     }
 
-    public Post UpdatePost(ulong id, UpdatePostRequest value)
+    public Post UpdatePost(ulong id, UpdatePostRequest value, string userId)
     {
         var post = context.Posts.Find(id);
         if (post == null) throw new KeyNotFoundException(NoPostFoundMessage(id));
@@ -36,6 +37,7 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
         post.Title = value.Title;
         post.Content = value.Content;
         post.Status = value.Status;
+        post.UpdatedBy = userId;
 
         var updatedPost = context.Posts.Update(post);
         context.SaveChanges();

@@ -12,20 +12,21 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
     public RegularEvent GetEvent(ulong id) =>
         context.RegularEvents.Find(id) ?? throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(id));
 
-    public RegularEvent CreateEvent(CreateEventRequest value)
+    public RegularEvent CreateEvent(CreateEventRequest value, string userId)
     {
         var eventEntry = context.RegularEvents.Add(new RegularEvent
         {
             Title = value.Title,
             Details = value.Details,
             Time = value.Time,
-            Location = value.Location
+            Location = value.Location,
+            CreatedBy = userId
         });
         context.SaveChanges();
         return eventEntry.Entity;
     }
 
-    public RegularEvent UpdateEvent(ulong id, UpdateEventRequest value)
+    public RegularEvent UpdateEvent(ulong id, UpdateEventRequest value, string userId)
     {
         var @event = context.RegularEvents.Find(id);
         if (@event == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(id));
@@ -35,6 +36,7 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
         @event.Status = value.Status;
         @event.Time = value.Time;
         @event.Location = value.Location;
+        @event.UpdatedBy = userId;
 
         var updatedEvent = context.RegularEvents.Update(@event);
         context.SaveChanges();

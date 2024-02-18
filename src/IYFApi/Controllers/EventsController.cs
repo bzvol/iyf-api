@@ -20,13 +20,14 @@ public class EventsController(IEventRepository repository, IGuestRepository gues
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
     public IActionResult CreateEvent([FromBody] CreateEventRequest value)
     {
-        var @event = repository.CreateEvent(value);
+        var @event = repository.CreateEvent(value, this.GetUid());
         return CreatedAtAction(nameof(GetEvent), new { id = @event.Id }, @event);
     }
 
     [HttpPut("{id}")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
-    public Event UpdateEvent(ulong id, [FromBody] UpdateEventRequest value) => repository.UpdateEvent(id, value);
+    public Event UpdateEvent(ulong id, [FromBody] UpdateEventRequest value) =>
+        repository.UpdateEvent(id, value, this.GetUid());
 
     [HttpDelete("{id}")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
