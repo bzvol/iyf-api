@@ -21,14 +21,14 @@ public class RegularEventsController(IRegularEventRepository repository) : Contr
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
     public async Task<IActionResult> CreateEvent([FromBody] CreateEventRequest value)
     {
-        var @event = repository.CreateEvent(value, await AuthService.GetUidFromRequest(Request));
+        var @event = repository.CreateEvent(value, await AuthService.GetUidFromRequestAsync(Request));
         return CreatedAtAction(nameof(GetEvent), new { id = @event.Id }, @event);
     }
 
     [HttpPut("{id}")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
     public async Task<RegularEventResponse> UpdateEvent(ulong id, [FromBody] UpdateEventRequest value) =>
-        repository.UpdateEvent(id, value, await AuthService.GetUidFromRequest(Request));
+        repository.UpdateEvent(id, value, await AuthService.GetUidFromRequestAsync(Request));
 
     [HttpDelete("{id}")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]

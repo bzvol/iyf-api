@@ -21,14 +21,14 @@ public class PostsController(IPostRepository repository) : ControllerBase
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
     public async Task<IActionResult> CreatePost([FromBody] CreatePostRequest value)
     {
-        var post = repository.CreatePost(value, await AuthService.GetUidFromRequest(Request));
+        var post = repository.CreatePost(value, await AuthService.GetUidFromRequestAsync(Request));
         return CreatedAtAction(nameof(GetPost), new { id = post.Id }, post);
     }
 
     [HttpPut("{id}")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
     public async Task<PostResponse> UpdatePost(ulong id, [FromBody] UpdatePostRequest value) =>
-        repository.UpdatePost(id, value, await AuthService.GetUidFromRequest(Request));
+        repository.UpdatePost(id, value, await AuthService.GetUidFromRequestAsync(Request));
 
     [HttpDelete("{id}")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]

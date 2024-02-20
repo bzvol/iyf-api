@@ -15,6 +15,10 @@ namespace IYFApi;
 
 public class Startup
 {
+    private const string FirebaseProjectId = "iyfhu-caaf9";
+    private static readonly string[] AllowedOrigins =
+        ["http://localhost:3000", "https://iyf.hu", "https://admin.iyf.hu"];
+
     public void ConfigureServices(IServiceCollection services)
     {
         AddDependencyInjection(services);
@@ -26,8 +30,7 @@ public class Startup
         });
 
         services.AddCors(options =>
-            options.AddDefaultPolicy(policy => policy.WithOrigins(
-                "http://localhost:5000", "https://iyf.hu", "https://admin.iyf.hu")));
+            options.AddDefaultPolicy(policy => policy.WithOrigins(AllowedOrigins)));
 
         services.AddControllers()
             .AddJsonOptions(options =>
@@ -41,7 +44,7 @@ public class Startup
         FirebaseApp.Create(new AppOptions
         {
             Credential = LoadFirebaseCredentials(),
-            ProjectId = "iyfhu-caaf9"
+            ProjectId = FirebaseProjectId
         });
 
         services.AddEndpointsApiExplorer();
@@ -57,6 +60,7 @@ public class Startup
 
         services.AddSingleton<IDonationService, DonationService>();
         services.AddSingleton<IAuthService, AuthService>();
+        services.AddSingleton<IMailService, MailService>();
     }
 
     private static GoogleCredential LoadFirebaseCredentials()

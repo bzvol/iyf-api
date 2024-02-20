@@ -1,13 +1,16 @@
-﻿using FirebaseAdmin.Auth;
+﻿using System.Reflection;
+using System.Security.Authentication;
+using FirebaseAdmin.Auth;
+using IYFApi.Models.Request;
 using IYFApi.Services.Interfaces;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
+using MimeKit;
 
 namespace IYFApi.Services;
 
-public class AuthService : IAuthService
+public class AuthService(IMailService mailService) : IAuthService
 {
-    public async Task<IEnumerable<UserRecord>> GetAllUsers()
+    public async Task<IEnumerable<UserRecord>> GetAllUsersAsync()
     {
         var userRecords = FirebaseAuth.DefaultInstance.ListUsersAsync(null);
         var users = new List<UserRecord>();
@@ -15,51 +18,229 @@ public class AuthService : IAuthService
         return users;
     }
 
-    public async Task SetDefaults(string uid)
+    public async Task<UserRecord> GetUserAsync(string uid) => await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
+
+    public async Task SetDefaultCustomClaimsAsync(string uid)
     {
         var user = await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
+        if (user.CustomClaims.Count > 0)
+            throw new InvalidOperationException("User already has custom claims");
+
         var isAdminByDefault = user.Email != null && user.Email.EndsWith("@iyf.hu") && user.EmailVerified;
-        await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(uid, new Dictionary<string, object>
+        await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(uid, new UserRoleClaims
         {
-            { "accessRequested", false },
-            { "admin", isAdminByDefault },
-            { "contentManager", false },
-            { "guestManager", false },
-            { "accessManager", false }
-        });
+            AccessRequested = false,
+            AccessDenied = false,
+            Admin = isAdminByDefault,
+            ContentManager = false,
+            GuestManager = false,
+            AccessManager = false
+        }.ToObjDictionary());
     }
 
-    public async Task RequestAccess(string uid)
+    public async Task ClearCustomClaimsAsync(string uid) =>
+        await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(uid, new Dictionary<string, object>());
+
+    public async Task RequestAccessAsync(string uid)
     {
-        await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(uid, new Dictionary<string, object>
+        var user = await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
+
+        if (user.CustomClaims.TryGetValue("accessRequested", out var accessRequested) && (bool)accessRequested)
+            throw new InvalidOperationException("Access request has been already sent");
+
+        if (user.CustomClaims.TryGetValue("accessDenied", out var accessDenied) && (bool)accessDenied)
         {
-            { "accessRequested", true }
-        });
-        
-        var managers = (await GetAllUsers())
-            .Where(u => 
+            await GrantAccessAsync(uid, false);
+            return;
+        }
+
+        if (user.CustomClaims.TryGetValue("admin", out var admin) && (bool)admin)
+            throw new InvalidOperationException("The requested user was already given access");
+
+        await SetCustomUserClaimsKeepExisting(user, new UserRoleClaims { AccessRequested = true },
+            UserRoleClaims.OverrideMode.Override);
+
+        var managers = (await GetAllUsersAsync())
+            .Where(u =>
                 u.CustomClaims.TryGetValue("accessManager", out var accessManager) && (bool)accessManager)
-            .Select(u => u.Email);
-        // TODO: Send emails
+            .Select(u => new MailboxAddress(u.DisplayName, u.Email)).ToList();
+        if (managers.Count == 0) return;
+
+        var template = LoadAccessRequestEmailTemplate(user.DisplayName, user.Email, user.PhotoUrl);
+        mailService.SendEmail(managers, "Access request", template);
     }
 
-    public async Task GrantAccess(string uid)
+    public async Task GrantAccessAsync(string uid, bool grant)
     {
-        await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(uid, new Dictionary<string, object>
-        {
-            { "accessRequested", false },
-            { "admin", true }
-        });
+        var user = await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
+
+        if (user.CustomClaims.TryGetValue("admin", out var admin) && (bool)admin)
+            throw new InvalidOperationException("The requested user was already given access");
+
+        await SetCustomUserClaimsKeepExisting(user,
+            new UserRoleClaims { AccessRequested = false, AccessDenied = true, Admin = grant },
+            UserRoleClaims.OverrideMode.Override);
+
+        if (!user.EmailVerified) return;
+
+        var recipient = new MailboxAddress(user.DisplayName, user.Email);
+        var template = LoadAccessGrantedEmailTemplate(user.DisplayName);
+        mailService.SendEmail([recipient], "Access granted", template);
     }
 
-    public static async Task<string> GetUidFromRequest(HttpRequest request)
+    public async Task RevokeAccessAsync(string uid, bool notifyUser)
+    {
+        var user = await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
+
+        if (!user.CustomClaims.TryGetValue("admin", out var admin) || !(bool)admin)
+            throw new InvalidOperationException("The requested user doesn't have admin access");
+
+        await SetCustomUserClaimsKeepExisting(user, new UserRoleClaims { Admin = false },
+            UserRoleClaims.OverrideMode.Override);
+
+        if (!notifyUser || !user.EmailVerified) return;
+
+        var recipient = new MailboxAddress(user.DisplayName, user.Email);
+        var template = LoadAccessRevokedEmailTemplate(user.DisplayName);
+        mailService.SendEmail([recipient], "Access revoked", template);
+    }
+
+    public async Task UpdateRolesAsync(string uid, UpdateRolesRequest value)
+    {
+        var user = await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
+        await SetCustomUserClaimsKeepExisting(user, new UserRoleClaims
+        {
+            ContentManager = value.ContentManager,
+            GuestManager = value.GuestManager,
+            AccessManager = value.AccessManager
+        }, UserRoleClaims.OverrideMode.KeepTrue);
+    }
+
+    private static async Task SetCustomUserClaimsKeepExisting(UserRecord user, Dictionary<string, bool?> newClaims,
+        UserRoleClaims.OverrideMode overrideMode)
+    {
+        var existingClaims = user.CustomClaims?.ToDictionary() ?? new Dictionary<string, object>();
+        var keys = existingClaims.Keys.Union(newClaims.Keys);
+        var mergedClaims = keys.ToDictionary(key => key,
+            key => (object)GetClaimValueByMode((
+                existingClaims.TryGetValue(key, out var val1) ? (bool?)val1 : null,
+                newClaims.GetValueOrDefault(key)
+            ), overrideMode));
+
+        await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(user.Uid, mergedClaims);
+    }
+
+    private static bool GetClaimValueByMode(
+        (bool? existingValue, bool? newValue) values,
+        UserRoleClaims.OverrideMode mode) =>
+        mode switch
+        {
+            UserRoleClaims.OverrideMode.KeepExisting => (values.existingValue ?? values.newValue)!.Value,
+            UserRoleClaims.OverrideMode.Override => (values.newValue ?? values.existingValue)!.Value,
+            UserRoleClaims.OverrideMode.KeepTrue => (values.existingValue ?? false) || (values.newValue ?? false),
+            _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
+        };
+
+    private static string LoadAccessRequestEmailTemplate(string name, string email, string photoUrl)
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        try
+        {
+            using var stream = assembly.GetManifestResourceStream(ResourceNames.AccessRequest)!;
+            using var reader = new StreamReader(stream);
+
+            var template = reader.ReadToEnd();
+            return template
+                .Replace("{{name}}", name)
+                .Replace("{{email}}", email)
+                .Replace("{{photoUrl}}", photoUrl);
+        }
+        catch (Exception e)
+        {
+            throw new Exception("Failed to load email template", e);
+        }
+    }
+
+    private static string LoadAccessGrantedEmailTemplate(string name)
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        try
+        {
+            using var stream = assembly.GetManifestResourceStream(ResourceNames.AccessGranted)!;
+            using var reader = new StreamReader(stream);
+
+            var template = reader.ReadToEnd();
+            return template.Replace("{{name}}", name);
+        }
+        catch (Exception e)
+        {
+            throw new Exception("Failed to load email template", e);
+        }
+    }
+
+    private static string LoadAccessRevokedEmailTemplate(string name)
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        try
+        {
+            using var stream = assembly.GetManifestResourceStream(ResourceNames.AccessRevoked)!;
+            using var reader = new StreamReader(stream);
+
+            var template = reader.ReadToEnd();
+            return template.Replace("{{name}}", name);
+        }
+        catch (Exception e)
+        {
+            throw new Exception("Failed to load email template", e);
+        }
+    }
+
+    public static async Task<string> GetUidFromRequestAsync(HttpRequest request)
     {
         var authHeader = request.Headers.TryGetValue("Authorization", out var bearer);
         if (!authHeader || bearer == StringValues.Empty)
-            throw new Exception("No authorization header found");
+            throw new AuthenticationException("No authorization header found");
 
         var token = bearer.ToString().Split(" ")[1];
         var decodedToken = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(token);
         return decodedToken.Uid;
+    }
+
+    private class UserRoleClaims
+    {
+        public bool? AccessRequested { get; init; }
+        public bool? AccessDenied { get; init; }
+        public bool? Admin { get; init; }
+        public bool? ContentManager { get; init; }
+        public bool? GuestManager { get; init; }
+        public bool? AccessManager { get; init; }
+
+        public static implicit operator Dictionary<string, bool?>(UserRoleClaims claims) =>
+            new()
+            {
+                { "accessRequested", claims.AccessRequested },
+                { "accessDenied", claims.AccessDenied },
+                { "admin", claims.Admin },
+                { "contentManager", claims.ContentManager },
+                { "guestManager", claims.GuestManager },
+                { "accessManager", claims.AccessManager }
+            };
+
+        public Dictionary<string, object?> ToObjDictionary() => ((Dictionary<string, bool?>)this)
+            .ToDictionary(pair => pair.Key, pair => (object?)pair.Value);
+
+        public enum OverrideMode
+        {
+            KeepExisting,
+            Override,
+            KeepTrue
+        }
+    }
+
+    private static class ResourceNames
+    {
+        public const string AccessRequest = "IYFApi.Resources.AccessRequestEmailTemplate.html";
+        public const string AccessGranted = "IYFApi.Resources.AccessGrantedEmailTemplate.html";
+        public const string AccessRevoked = "IYFApi.Resources.AccessRevokedEmailTemplate.html";
     }
 }
