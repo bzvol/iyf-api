@@ -29,5 +29,6 @@
       <EmbeddedResource Include="Resources\AccessGrantedEmailTemplate.html" />
       <EmbeddedResource Include="Resources\AccessDeniedEmailTemplate.html" />
       <EmbeddedResource Include="Resources\AccessRevokedEmailTemplate.html" />
+      <EmbeddedResource Include="Resources\RolesUpdatedEmailTemplate.html" />
     </ItemGroup>
 </Project>

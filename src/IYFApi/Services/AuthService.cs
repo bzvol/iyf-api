@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Security.Authentication;
 using FirebaseAdmin.Auth;
+using IYFApi.Models;
 using IYFApi.Models.Request;
 using IYFApi.Services.Interfaces;
 using Microsoft.Extensions.Primitives;
@@ -66,7 +67,12 @@ public class AuthService(IMailService mailService) : IAuthService
             .Select(u => new MailboxAddress(u.DisplayName, u.Email)).ToList();
         if (managers.Count == 0) return;
 
-        var template = LoadAccessRequestEmailTemplate(user.DisplayName, user.Email, user.PhotoUrl);
+        var template = LoadEmailTemplate(ResourceNames.AccessRequest, new Dictionary<string, string>
+        {
+            { "name", user.DisplayName },
+            { "email", user.Email },
+            { "photoUrl", user.PhotoUrl }
+        });
         mailService.SendEmail(managers, "Access request", template);
     }
 
@@ -84,7 +90,8 @@ public class AuthService(IMailService mailService) : IAuthService
         if (!user.EmailVerified) return;
 
         var recipient = new MailboxAddress(user.DisplayName, user.Email);
-        var template = LoadAccessGrantedEmailTemplate(user.DisplayName);
+        var template = LoadEmailTemplate(grant ? ResourceNames.AccessGranted : ResourceNames.AccessDenied,
+            new Dictionary<string, string> { { "name", user.DisplayName } });
         mailService.SendEmail([recipient], "Access granted", template);
     }
 
@@ -101,7 +108,8 @@ public class AuthService(IMailService mailService) : IAuthService
         if (!notifyUser || !user.EmailVerified) return;
 
         var recipient = new MailboxAddress(user.DisplayName, user.Email);
-        var template = LoadAccessRevokedEmailTemplate(user.DisplayName);
+        var template = LoadEmailTemplate(ResourceNames.AccessRevoked,
+            new Dictionary<string, string> { { "name", user.DisplayName } });
         mailService.SendEmail([recipient], "Access revoked", template);
     }
 
@@ -113,7 +121,16 @@ public class AuthService(IMailService mailService) : IAuthService
             ContentManager = value.ContentManager,
             GuestManager = value.GuestManager,
             AccessManager = value.AccessManager
-        }, UserRoleClaims.OverrideMode.KeepTrue);
+        }, UserRoleClaims.OverrideMode.Override);
+
+        var rolesUpdated = new Dictionary<AdminRole, bool>();
+        if (value.ContentManager.HasValue) rolesUpdated.Add(AdminRole.ContentManager, value.ContentManager.Value);
+        if (value.GuestManager.HasValue) rolesUpdated.Add(AdminRole.GuestManager, value.GuestManager.Value);
+        if (value.AccessManager.HasValue) rolesUpdated.Add(AdminRole.AccessManager, value.AccessManager.Value);
+
+        var recipient = new MailboxAddress(user.DisplayName, user.Email);
+        var template = LoadRolesUpdatedEmailTemplate(user.DisplayName, rolesUpdated);
+        mailService.SendEmail([recipient], "Roles updated", template);
     }
 
     private static async Task SetCustomUserClaimsKeepExisting(UserRecord user, Dictionary<string, bool?> newClaims,
@@ -141,19 +158,19 @@ public class AuthService(IMailService mailService) : IAuthService
             _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
         };
 
-    private static string LoadAccessRequestEmailTemplate(string name, string email, string photoUrl)
+    private static string LoadEmailTemplate(string resourceName, Dictionary<string, string>? templateValues = null)
     {
         var assembly = Assembly.GetExecutingAssembly();
         try
         {
-            using var stream = assembly.GetManifestResourceStream(ResourceNames.AccessRequest)!;
+            using var stream = assembly.GetManifestResourceStream(resourceName)!;
             using var reader = new StreamReader(stream);
 
             var template = reader.ReadToEnd();
-            return template
-                .Replace("{{name}}", name)
-                .Replace("{{email}}", email)
-                .Replace("{{photoUrl}}", photoUrl);
+            if (templateValues == null) return template;
+
+            return templateValues.Aggregate(template,
+                (current, pair) => current.Replace($"{{{{{pair.Key}}}}}", pair.Value));
         }
         catch (Exception e)
         {
@@ -161,38 +178,25 @@ public class AuthService(IMailService mailService) : IAuthService
         }
     }
 
-    private static string LoadAccessGrantedEmailTemplate(string name)
+    private static string LoadRolesUpdatedEmailTemplate(string name, Dictionary<AdminRole, bool> roleUpdates)
     {
-        var assembly = Assembly.GetExecutingAssembly();
-        try
+        var template = LoadEmailTemplate(ResourceNames.RolesUpdated);
+        
+        var listItems = roleUpdates.Select(pair =>
         {
-            using var stream = assembly.GetManifestResourceStream(ResourceNames.AccessGranted)!;
-            using var reader = new StreamReader(stream);
-
-            var template = reader.ReadToEnd();
-            return template.Replace("{{name}}", name);
-        }
-        catch (Exception e)
-        {
-            throw new Exception("Failed to load email template", e);
-        }
-    }
-
-    private static string LoadAccessRevokedEmailTemplate(string name)
-    {
-        var assembly = Assembly.GetExecutingAssembly();
-        try
-        {
-            using var stream = assembly.GetManifestResourceStream(ResourceNames.AccessRevoked)!;
-            using var reader = new StreamReader(stream);
-
-            var template = reader.ReadToEnd();
-            return template.Replace("{{name}}", name);
-        }
-        catch (Exception e)
-        {
-            throw new Exception("Failed to load email template", e);
-        }
+            var roleDisplayName = pair.Key switch
+            {
+                AdminRole.ContentManager => "Content Manager",
+                AdminRole.GuestManager => "Guest Manager",
+                AdminRole.AccessManager => "Access Manager",
+                _ => throw new ArgumentOutOfRangeException()
+            };
+            return $"<li>You were {(pair.Value ? "granted" : "revoked")} the {roleDisplayName} role</li>\n";
+        });
+        
+        return template
+            .Replace("{{name}}", name)
+            .Replace("{{roleUpdates}}", string.Join("", listItems.ToArray()));
     }
 
     public static async Task<string> GetUidFromRequestAsync(HttpRequest request)
@@ -241,6 +245,8 @@ public class AuthService(IMailService mailService) : IAuthService
     {
         public const string AccessRequest = "IYFApi.Resources.AccessRequestEmailTemplate.html";
         public const string AccessGranted = "IYFApi.Resources.AccessGrantedEmailTemplate.html";
+        public const string AccessDenied = "IYFApi.Resources.AccessDeniedEmailTemplate.html";
         public const string AccessRevoked = "IYFApi.Resources.AccessRevokedEmailTemplate.html";
+        public const string RolesUpdated = "IYFApi.Resources.RolesUpdatedEmailTemplate.html";
     }
 }
