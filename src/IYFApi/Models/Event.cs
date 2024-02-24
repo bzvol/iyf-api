@@ -20,14 +20,14 @@ public class Event
     public string Details { get; set; } = null!;
     
     [Column("time_start")]
-    public DateTime StartTime { get; set; }
+    public DateTime? StartTime { get; set; }
     
     [Column("time_end")]
-    public DateTime EndTime { get; set; }
+    public DateTime? EndTime { get; set; }
     
     [Column("location")]
     [StringLength(255)]
-    public string Location { get; set; } = null!;
+    public string? Location { get; set; }
 
     [Column("status", TypeName = "enum('draft','published','archived')")]
     public Status Status { get; set; } = Status.Draft;

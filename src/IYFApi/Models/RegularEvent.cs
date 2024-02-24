@@ -21,11 +21,11 @@ public class RegularEvent
     
     [Column("time")]
     [StringLength(255)]
-    public string Time { get; set; } = null!;
+    public string? Time { get; set; } = null!;
     
     [Column("location")]
     [StringLength(255)]
-    public string Location { get; set; } = null!;
+    public string? Location { get; set; } = null!;
 
     [Column("status", TypeName = "enum('draft','published','archived')")]
     public Status Status { get; set; } = Status.Draft;

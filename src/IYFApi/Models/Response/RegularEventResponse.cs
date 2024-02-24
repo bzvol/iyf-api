@@ -12,6 +12,6 @@ public class RegularEventResponse
 
 public class RegularEventSchedule
 {
-    public string Time { get; init; } = null!;
-    public string Location { get; init; } = null!;
+    public string? Time { get; init; } = null!;
+    public string? Location { get; init; } = null!;
 }

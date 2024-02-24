@@ -7,7 +7,8 @@ namespace IYFApi.Repositories;
 
 public class RegularEventRepository(ApplicationDbContext context) : IRegularEventRepository
 {
-    public IEnumerable<RegularEventResponse> GetAllEvents() => context.RegularEvents.ToList().Select(ConvertToResponseObject);
+    public IEnumerable<RegularEventResponse> GetAllEvents() =>
+        context.RegularEvents.ToList().Select(ConvertToResponseObject);
 
     public RegularEventResponse GetEvent(ulong id)
     {
@@ -61,25 +62,24 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
         return ConvertToResponseObject(deletedEvent.Entity);
     }
 
-    private static RegularEventResponse ConvertToResponseObject(RegularEvent @event) =>
-        new RegularEventResponse
+    private static RegularEventResponse ConvertToResponseObject(RegularEvent @event) => new()
+    {
+        Id = @event.Id,
+        Title = @event.Title,
+        Details = @event.Details,
+        Schedule = new RegularEventSchedule
         {
-            Id = @event.Id,
-            Title = @event.Title,
-            Details = @event.Details,
-            Schedule = new RegularEventSchedule
-            {
-                Time = @event.Time,
-                Location = @event.Location
-            },
+            Time = @event.Time,
+            Location = @event.Location
+        },
 
-            Status = @event.Status,
-            Metadata = new ObjectMetadata
-            {
-                CreatedAt = @event.CreatedAt,
-                CreatedBy = @event.CreatedBy,
-                UpdatedAt = @event.UpdatedAt,
-                UpdatedBy = @event.UpdatedBy
-            }
-        };
+        Status = @event.Status,
+        Metadata = new ObjectMetadata
+        {
+            CreatedAt = @event.CreatedAt,
+            CreatedBy = @event.CreatedBy,
+            UpdatedAt = @event.UpdatedAt,
+            UpdatedBy = @event.UpdatedBy
+        }
+    };
 }
