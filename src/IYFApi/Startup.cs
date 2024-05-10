@@ -16,6 +16,7 @@ namespace IYFApi;
 public class Startup
 {
     private const string FirebaseProjectId = "iyfhu-caaf9";
+
     private static readonly string[] AllowedOrigins =
         ["http://localhost:3000", "https://iyf.hu", "https://admin.iyf.hu"];
 
@@ -30,7 +31,7 @@ public class Startup
         });
 
         services.AddCors(options =>
-            options.AddDefaultPolicy(policy => policy.WithOrigins(AllowedOrigins)));
+            options.AddDefaultPolicy(policy => policy.WithOrigins(AllowedOrigins).AllowAnyHeader().AllowAnyMethod()));
 
         services.AddControllers()
             .AddJsonOptions(options =>
