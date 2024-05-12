@@ -40,7 +40,7 @@ public class Startup
                     new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
             });
 
-        services.AddDbContext<ApplicationDbContext>();
+        services.AddDbContext<ApplicationDbContext>(ServiceLifetime.Transient);
 
         FirebaseApp.Create(new AppOptions
         {
