@@ -2,9 +2,9 @@ namespace IYFApi.Models.Response;
 
 public class CountInfoResponse
 {
-    public PostCountInfo Posts { get; set; }
-    public EventCountInfo Events { get; set; }
-    public RegularEventCountInfo RegularEvents { get; set; }
+    public PostCountInfo Posts { get; set; } = null!;
+    public EventCountInfo Events { get; set; } = null!;
+    public RegularEventCountInfo RegularEvents { get; set; } = null!;
 }
 
 public class PostCountInfo
