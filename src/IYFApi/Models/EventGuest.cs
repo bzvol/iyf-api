@@ -41,4 +41,27 @@ public class EventGuest
 
     [Column("created_at", TypeName = "timestamp")]
     public DateTime CreatedAt { get; init; }
+
+    public class EquivalencyComparer : IEqualityComparer<EventGuest>
+    {
+        public bool Equals(EventGuest? x, EventGuest? y)
+        {
+            if (ReferenceEquals(x, y)) return true;
+            if (x is null || y is null) return false;
+            
+            if (x.Id == y.Id) return true;
+
+            var nameEquals = x.Name != null && y.Name != null && x.Name == y.Name;
+            var emailEquals = x.Email != null && y.Email != null && x.Email == y.Email;
+            var phoneEquals = x.Phone != null && y.Phone != null && x.Phone == y.Phone;
+
+            // If name&email / name&phone / email&phone are same, then x is equivalent to y.
+            return (nameEquals && (emailEquals || phoneEquals)) || (emailEquals && phoneEquals);
+        }
+
+        public int GetHashCode(EventGuest obj)
+        {
+            return HashCode.Combine(obj.Name, obj.Email, obj.Phone);
+        }
+    }
 }

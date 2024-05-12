@@ -59,6 +59,7 @@ public class Startup
         services.AddSingleton<IRegularEventRepository, RegularEventRepository>();
         services.AddSingleton<IGuestRepository, GuestRepository>();
 
+        services.AddSingleton<IInfoService, InfoService>();
         services.AddSingleton<IDonationService, DonationService>();
         services.AddSingleton<IAuthService, AuthService>();
         services.AddSingleton<IMailService, MailService>();
