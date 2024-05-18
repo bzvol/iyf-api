@@ -84,6 +84,7 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
 
     private PostResponse ConvertToPostResponse(Post post) => new()
     {
+        Id = post.Id,
         Title = post.Title,
         Content = post.Content,
         Tags = from pt in context.PostsTags
