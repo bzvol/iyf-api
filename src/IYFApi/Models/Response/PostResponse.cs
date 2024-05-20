@@ -6,6 +6,7 @@ public class PostResponse
     public string Title { get; init; } = null!;
     public string Content { get; init; } = null!;
     public IEnumerable<string> Tags { get; init; } = null!;
+    public DateTime? PublishedAt { get; init; }
 }
 
 public class PostAuthorizedResponse : PostResponse

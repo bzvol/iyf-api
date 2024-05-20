@@ -54,6 +54,11 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
         @event.EndTime = value.EndTime;
         @event.Location = value.Location;
         @event.UpdatedBy = userId;
+        
+        if (@event.Status != Status.Published && value.Status == Status.Published)
+            @event.PublishedAt = DateTime.UtcNow;
+        else if (@event.Status == Status.Published && value.Status != Status.Published)
+            @event.PublishedAt = null;
 
         var updatedEvent = context.Events.Update(@event);
         context.SaveChanges();
@@ -85,6 +90,7 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
             EndTime = @event.EndTime,
             Location = @event.Location
         },
+        PublishedAt = @event.PublishedAt
     };
     
     private static EventAuthorizedResponse ConvertToEventAuthorizedResponse(Event @event) => new()
@@ -98,6 +104,7 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
             EndTime = @event.EndTime,
             Location = @event.Location
         },
+        PublishedAt = @event.PublishedAt,
         Status = @event.Status,
         Metadata = new ObjectMetadata
         {

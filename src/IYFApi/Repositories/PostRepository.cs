@@ -50,6 +50,11 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
         post.Content = value.Content;
         post.Status = value.Status;
         post.UpdatedBy = userId;
+        
+        if (post.Status != Status.Published && value.Status == Status.Published)
+            post.PublishedAt = DateTime.UtcNow;
+        else if (post.Status == Status.Published && value.Status != Status.Published)
+            post.PublishedAt = null;
 
         var updatedPost = context.Posts.Update(post);
         context.SaveChanges();
@@ -98,7 +103,8 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
         Content = post.Content,
         Tags = from pt in context.PostsTags
             where pt.PostId == post.Id
-            select pt.Tag.Name
+            select pt.Tag.Name,
+        PublishedAt = post.PublishedAt
     };
 
     private PostAuthorizedResponse ConvertToPostAuthorizedResponse(Post post) => new()
@@ -109,7 +115,7 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
         Tags = from pt in context.PostsTags
             where pt.PostId == post.Id
             select pt.Tag.Name,
-
+        PublishedAt = post.PublishedAt,
         Status = post.Status,
         Metadata = new ObjectMetadata
         {

@@ -6,6 +6,7 @@ public class EventResponse
     public string Title { get; init; } = null!;
     public string Details { get; init; } = null!;
     public EventSchedule Schedule { get; init; } = null!;
+    public DateTime? PublishedAt { get; init; }
 }
 
 public class EventAuthorizedResponse : EventResponse

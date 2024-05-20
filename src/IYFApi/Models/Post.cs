@@ -35,4 +35,7 @@ public class Post
     [Column("updated_by")]
     [StringLength(255)]
     public string UpdatedBy { get; set; } = null!;
+    
+    [Column("published_at", TypeName = "timestamp")]
+    public DateTime? PublishedAt { get; set; }
 }
