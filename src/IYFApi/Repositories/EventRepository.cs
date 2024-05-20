@@ -39,7 +39,7 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
             CreatedBy = userId
         });
         context.SaveChanges();
-        return ConvertToEventResponse(eventEntry.Entity);
+        return ConvertToEventAuthorizedResponse(eventEntry.Entity);
     }
 
     public EventResponse UpdateEvent(ulong id, UpdateEventRequest value, string userId)
@@ -63,7 +63,7 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
         var updatedEvent = context.Events.Update(@event);
         context.SaveChanges();
 
-        return ConvertToEventResponse(updatedEvent.Entity);
+        return ConvertToEventAuthorizedResponse(updatedEvent.Entity);
     }
 
     public EventResponse DeleteEvent(ulong id)
@@ -76,7 +76,7 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
 
         var deletedEvent = context.Events.Remove(@event);
         context.SaveChanges();
-        return ConvertToEventResponse(deletedEvent.Entity);
+        return ConvertToEventAuthorizedResponse(deletedEvent.Entity);
     }
 
     private static EventResponse ConvertToEventResponse(Event @event) => new()

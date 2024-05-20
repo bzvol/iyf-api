@@ -39,7 +39,7 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
 
         SetTagsForPost(post.Entity.Id, value.Tags);
 
-        return ConvertToPostResponse(post.Entity);
+        return ConvertToPostAuthorizedResponse(post.Entity);
     }
 
     public PostResponse UpdatePost(ulong id, UpdatePostRequest value, string userId)
@@ -61,7 +61,7 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
 
         SetTagsForPost(updatedPost.Entity.Id, value.Tags);
 
-        return ConvertToPostResponse(updatedPost.Entity);
+        return ConvertToPostAuthorizedResponse(updatedPost.Entity);
     }
 
     public PostResponse DeletePost(ulong id)
@@ -74,7 +74,7 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
         var deletedPost = context.Posts.Remove(post);
         context.SaveChanges();
 
-        return ConvertToPostResponse(deletedPost.Entity);
+        return ConvertToPostAuthorizedResponse(deletedPost.Entity);
     }
 
     private void SetTagsForPost(ulong id, IEnumerable<string> tags)

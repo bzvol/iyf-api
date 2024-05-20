@@ -40,7 +40,7 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
             CreatedBy = userId
         });
         context.SaveChanges();
-        return ConvertToEventResponse(eventEntry.Entity);
+        return ConvertToEventAuthorizedResponse(eventEntry.Entity);
     }
 
     public RegularEventResponse UpdateEvent(ulong id, UpdateEventRequest value, string userId)
@@ -58,7 +58,7 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
         var updatedEvent = context.RegularEvents.Update(@event);
         context.SaveChanges();
 
-        return ConvertToEventResponse(updatedEvent.Entity);
+        return ConvertToEventAuthorizedResponse(updatedEvent.Entity);
     }
 
     public RegularEventResponse DeleteEvent(ulong id)
@@ -71,7 +71,7 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
 
         var deletedEvent = context.RegularEvents.Remove(@event);
         context.SaveChanges();
-        return ConvertToEventResponse(deletedEvent.Entity);
+        return ConvertToEventAuthorizedResponse(deletedEvent.Entity);
     }
 
     private static RegularEventResponse ConvertToEventResponse(RegularEvent @event) => new()
