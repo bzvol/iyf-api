@@ -42,7 +42,8 @@ public class AdminAuthorizationFilterAttribute(AdminRole role) : Attribute, IAut
     {
         AdminRole.ContentManager => "contentManager",
         AdminRole.GuestManager => "guestManager",
-        AdminRole.AccessManager => "accessManager"
+        AdminRole.AccessManager => "accessManager",
+        AdminRole.Admin => "admin",
     };
 #pragma warning restore CS8524
 

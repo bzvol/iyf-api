@@ -11,10 +11,11 @@ namespace IYFApi.Controllers;
 public class UsersController(IAuthService authService) : ControllerBase
 {
     [HttpGet]
-    [AdminAuthorizationFilter(AdminRole.AccessManager)]
+    [AdminAuthorizationFilter(AdminRole.Admin)]
     public async Task<IEnumerable<UserRecord>> GetAllUsers() => await authService.GetAllUsersAsync();
     
     [HttpGet("{uid}")]
+    [AdminAuthorizationFilter(AdminRole.Admin)]
     public async Task<UserRecord> GetUser(string uid) => await authService.GetUserAsync(uid);
     
     [HttpPost("{uid}/set-default-claims")]
