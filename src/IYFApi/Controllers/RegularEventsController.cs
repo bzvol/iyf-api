@@ -12,10 +12,16 @@ namespace IYFApi.Controllers;
 public class RegularEventsController(IRegularEventRepository repository) : ControllerBase
 {
     [HttpGet]
-    public IEnumerable<RegularEventResponse> GetAllEvents() => repository.GetAllEvents();
+    [OptionalAdminAuthorizationFilter]
+    public IEnumerable<RegularEventResponse> GetAllEvents() => (bool)HttpContext.Items["IsAuthorized"]!
+        ? repository.GetAllEventsAuthorized()
+        : repository.GetAllEvents();
 
     [HttpGet("{id}")]
-    public RegularEventResponse GetEvent(ulong id) => repository.GetEvent(id);
+    [OptionalAdminAuthorizationFilter]
+    public RegularEventResponse GetEvent(ulong id) => (bool)HttpContext.Items["IsAuthorized"]!
+        ? repository.GetEventAuthorized(id)
+        : repository.GetEvent(id);
 
     [HttpPost]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]

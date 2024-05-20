@@ -13,10 +13,16 @@ public class EventsController(IEventRepository repository, IGuestRepository gues
     : ControllerBase
 {
     [HttpGet]
-    public IEnumerable<EventResponse> GetAllEvents() => repository.GetAllEvents();
+    [OptionalAdminAuthorizationFilter]
+    public IEnumerable<EventResponse> GetAllEvents() => (bool)HttpContext.Items["IsAuthorized"]!
+        ? repository.GetAllEventsAuthorized()
+        : repository.GetAllEvents();
 
     [HttpGet("{id}")]
-    public EventResponse GetEvent(ulong id) => repository.GetEvent(id);
+    [OptionalAdminAuthorizationFilter]
+    public EventResponse GetEvent(ulong id) => (bool)HttpContext.Items["IsAuthorized"]!
+        ? repository.GetEventAuthorized(id)
+        : repository.GetEvent(id);
 
     [HttpPost]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]

@@ -7,14 +7,26 @@ namespace IYFApi.Repositories;
 
 public class RegularEventRepository(ApplicationDbContext context) : IRegularEventRepository
 {
-    public IEnumerable<RegularEventResponse> GetAllEvents() =>
-        context.RegularEvents.ToList().Select(ConvertToResponseObject);
+    public IEnumerable<RegularEventResponse> GetAllEvents() => context.RegularEvents
+        .Where(@event => @event.Status == Status.Published)
+        .ToList().Select(ConvertToEventResponse);
 
+    public IEnumerable<RegularEventAuthorizedResponse> GetAllEventsAuthorized() => context.RegularEvents
+        .ToList().Select(ConvertToEventAuthorizedResponse);
+    
     public RegularEventResponse GetEvent(ulong id)
+    {
+        var @event = context.RegularEvents.Find(id) ?? 
+                     throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(id));
+        if (@event.Status != Status.Published) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(id));
+        return ConvertToEventResponse(@event);
+    }
+    
+    public RegularEventAuthorizedResponse GetEventAuthorized(ulong id)
     {
         var @event = context.RegularEvents.Find(id) ??
                      throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(id));
-        return ConvertToResponseObject(@event);
+        return ConvertToEventAuthorizedResponse(@event);
     }
 
     public RegularEventResponse CreateEvent(CreateEventRequest value, string userId)
@@ -28,7 +40,7 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
             CreatedBy = userId
         });
         context.SaveChanges();
-        return ConvertToResponseObject(eventEntry.Entity);
+        return ConvertToEventResponse(eventEntry.Entity);
     }
 
     public RegularEventResponse UpdateEvent(ulong id, UpdateEventRequest value, string userId)
@@ -46,7 +58,7 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
         var updatedEvent = context.RegularEvents.Update(@event);
         context.SaveChanges();
 
-        return ConvertToResponseObject(updatedEvent.Entity);
+        return ConvertToEventResponse(updatedEvent.Entity);
     }
 
     public RegularEventResponse DeleteEvent(ulong id)
@@ -59,10 +71,22 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
 
         var deletedEvent = context.RegularEvents.Remove(@event);
         context.SaveChanges();
-        return ConvertToResponseObject(deletedEvent.Entity);
+        return ConvertToEventResponse(deletedEvent.Entity);
     }
 
-    private static RegularEventResponse ConvertToResponseObject(RegularEvent @event) => new()
+    private static RegularEventResponse ConvertToEventResponse(RegularEvent @event) => new()
+    {
+        Id = @event.Id,
+        Title = @event.Title,
+        Details = @event.Details,
+        Schedule = new RegularEventSchedule
+        {
+            Time = @event.Time,
+            Location = @event.Location
+        }
+    };
+    
+    private static RegularEventAuthorizedResponse ConvertToEventAuthorizedResponse(RegularEvent @event) => new()
     {
         Id = @event.Id,
         Title = @event.Title,
@@ -72,7 +96,6 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
             Time = @event.Time,
             Location = @event.Location
         },
-
         Status = @event.Status,
         Metadata = new ObjectMetadata
         {

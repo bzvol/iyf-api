@@ -7,15 +7,24 @@ namespace IYFApi.Repositories;
 
 public class PostRepository(ApplicationDbContext context) : IPostRepository
 {
-    public IEnumerable<PostResponse> GetAllPosts()
-    {
-        return context.Posts.ToList().Select(ConvertToPostResponse);
-    }
+    public IEnumerable<PostResponse> GetAllPosts() => context.Posts
+            .Where(post => post.Status == Status.Published)
+            .ToList().Select(ConvertToPostResponse);
+
+    public IEnumerable<PostAuthorizedResponse> GetAllPostsAuthorized() => context.Posts
+        .ToList().Select(ConvertToPostAuthorizedResponse);
 
     public PostResponse GetPost(ulong id)
     {
         var post = context.Posts.Find(id) ?? throw new KeyNotFoundException(NoPostFoundMessage(id));
+        if (post.Status != Status.Published) throw new KeyNotFoundException(NoPostFoundMessage(id));
         return ConvertToPostResponse(post);
+    }
+
+    public PostAuthorizedResponse GetPostAuthorized(ulong id)
+    {
+        var post = context.Posts.Find(id) ?? throw new KeyNotFoundException(NoPostFoundMessage(id));
+        return ConvertToPostAuthorizedResponse(post);
     }
 
     public PostResponse CreatePost(CreatePostRequest value, string userId)
@@ -27,9 +36,9 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
             CreatedBy = userId
         });
         context.SaveChanges();
-        
+
         SetTagsForPost(post.Entity.Id, value.Tags);
-        
+
         return ConvertToPostResponse(post.Entity);
     }
 
@@ -44,7 +53,7 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
 
         var updatedPost = context.Posts.Update(post);
         context.SaveChanges();
-        
+
         SetTagsForPost(updatedPost.Entity.Id, value.Tags);
 
         return ConvertToPostResponse(updatedPost.Entity);
@@ -59,7 +68,7 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
 
         var deletedPost = context.Posts.Remove(post);
         context.SaveChanges();
-        
+
         return ConvertToPostResponse(deletedPost.Entity);
     }
 
@@ -89,8 +98,18 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
         Content = post.Content,
         Tags = from pt in context.PostsTags
             where pt.PostId == post.Id
+            select pt.Tag.Name
+    };
+
+    private PostAuthorizedResponse ConvertToPostAuthorizedResponse(Post post) => new()
+    {
+        Id = post.Id,
+        Title = post.Title,
+        Content = post.Content,
+        Tags = from pt in context.PostsTags
+            where pt.PostId == post.Id
             select pt.Tag.Name,
-        
+
         Status = post.Status,
         Metadata = new ObjectMetadata
         {

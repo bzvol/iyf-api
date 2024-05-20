@@ -12,10 +12,16 @@ namespace IYFApi.Controllers;
 public class PostsController(IPostRepository repository) : ControllerBase
 {
     [HttpGet]
-    public IEnumerable<PostResponse> GetAllPosts() => repository.GetAllPosts();
+    [OptionalAdminAuthorizationFilter]
+    public IEnumerable<PostResponse> GetAllPosts() => (bool)HttpContext.Items["IsAuthorized"]!
+        ? repository.GetAllPostsAuthorized()
+        : repository.GetAllPosts();
 
     [HttpGet("{id}")]
-    public PostResponse GetPost(ulong id) => repository.GetPost(id);
+    [OptionalAdminAuthorizationFilter]
+    public PostResponse GetPost(ulong id) => (bool)HttpContext.Items["IsAuthorized"]!
+        ? repository.GetPostAuthorized(id)
+        : repository.GetPost(id);
 
     [HttpPost]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]

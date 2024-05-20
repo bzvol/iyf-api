@@ -6,6 +6,10 @@ public class RegularEventResponse
     public string Title { get; init; } = null!;
     public string Details { get; init; } = null!;
     public RegularEventSchedule Schedule { get; init; } = null!;
+}
+
+public class RegularEventAuthorizedResponse : RegularEventResponse
+{
     public Status Status { get; init; }
     public ObjectMetadata Metadata { get; init; } = null!;
 }

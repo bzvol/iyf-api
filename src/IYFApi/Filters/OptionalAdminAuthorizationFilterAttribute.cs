@@ -1,24 +1,20 @@
 using FirebaseAdmin.Auth;
 using IYFApi.Models;
-using IYFApi.Models.Response;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Primitives;
 
 namespace IYFApi.Filters;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-public class AdminAuthorizationFilterAttribute(AdminRole role = AdminRole.Admin) : Attribute, IAuthorizationFilter
+public class OptionalAdminAuthorizationFilterAttribute(AdminRole role = AdminRole.Admin) : Attribute, IActionFilter
 {
-    public async void OnAuthorization(AuthorizationFilterContext context)
+    public async void OnActionExecuting(ActionExecutingContext context)
     {
+        context.HttpContext.Items["IsAuthorized"] = false;
+        
         var authHeader = context.HttpContext.Request.Headers
             .TryGetValue("Authorization", out var bearer);
-        if (!authHeader || bearer == StringValues.Empty)
-        {
-            context.Result = UnauthorizedResult("No authorization header provided");
-            return;
-        }
+        if (!authHeader || bearer == StringValues.Empty) return;
 
         var token = bearer.ToString().Split(" ")[1];
 
@@ -29,14 +25,17 @@ public class AdminAuthorizationFilterAttribute(AdminRole role = AdminRole.Admin)
         }
         catch (FirebaseAuthException)
         {
-            context.Result = UnauthorizedResult("Failed to verify token");
             return;
         }
-
+        
         var authorized = (bool)decodedToken.Claims[GetRoleString(role)];
-        if (!authorized) context.Result = UnauthorizedResult($"Missing required role: {role}");
+        context.HttpContext.Items["IsAuthorized"] = authorized;
     }
-    
+
+    public void OnActionExecuted(ActionExecutedContext context)
+    {
+    }
+
     private static string GetRoleString(AdminRole role) => role switch
     {
         AdminRole.Admin => "admin",
@@ -45,12 +44,4 @@ public class AdminAuthorizationFilterAttribute(AdminRole role = AdminRole.Admin)
         AdminRole.AccessManager => "accessManager",
         _ => throw new ArgumentOutOfRangeException(nameof(role), role, "Invalid role")
     };
-
-    private static IActionResult UnauthorizedResult(string? extra = null) => new UnauthorizedObjectResult(
-        new ErrorResponse
-        {
-            Message = "You are not authorized to access this resource"
-                      + (extra != null ? " - " + extra : "") + ".",
-            Error = "Unauthorized"
-        });
 }

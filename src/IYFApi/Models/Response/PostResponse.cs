@@ -6,6 +6,10 @@ public class PostResponse
     public string Title { get; init; } = null!;
     public string Content { get; init; } = null!;
     public IEnumerable<string> Tags { get; init; } = null!;
+}
+
+public class PostAuthorizedResponse : PostResponse
+{
     public Status Status { get; init; }
     public ObjectMetadata Metadata { get; init; } = null!;
 }

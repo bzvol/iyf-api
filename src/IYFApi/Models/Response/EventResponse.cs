@@ -6,6 +6,10 @@ public class EventResponse
     public string Title { get; init; } = null!;
     public string Details { get; init; } = null!;
     public EventSchedule Schedule { get; init; } = null!;
+}
+
+public class EventAuthorizedResponse : EventResponse
+{
     public Status Status { get; init; }
     public ObjectMetadata Metadata { get; init; } = null!;
 }
