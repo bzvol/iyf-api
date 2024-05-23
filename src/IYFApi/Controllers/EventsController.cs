@@ -14,32 +14,32 @@ public class EventsController(IEventRepository repository, IGuestRepository gues
 {
     [HttpGet]
     [OptionalAdminAuthorizationFilter]
-    public IEnumerable<EventResponse> GetAllEvents() => (bool)HttpContext.Items["IsAuthorized"]!
-        ? repository.GetAllEventsAuthorized()
+    public async Task<IEnumerable<EventResponse>> GetAllEvents() => (bool)HttpContext.Items["IsAuthorized"]!
+        ? await repository.GetAllEventsAuthorized()
         : repository.GetAllEvents();
 
     [HttpGet("{id}")]
     [OptionalAdminAuthorizationFilter]
-    public EventResponse GetEvent(ulong id) => (bool)HttpContext.Items["IsAuthorized"]!
-        ? repository.GetEventAuthorized(id)
+    public async Task<EventResponse> GetEvent(ulong id) => (bool)HttpContext.Items["IsAuthorized"]!
+        ? await repository.GetEventAuthorized(id)
         : repository.GetEvent(id);
 
     [HttpPost]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
     public async Task<IActionResult> CreateEvent([FromBody] CreateEventRequest value)
     {
-        var @event = repository.CreateEvent(value, await AuthService.GetUidFromRequestAsync(Request));
+        var @event = repository.CreateEvent(value, ((UserRecordFix)HttpContext.Items["User"]!).Uid);
         return CreatedAtAction(nameof(GetEvent), new { id = @event.Id }, @event);
     }
 
     [HttpPut("{id}")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
     public async Task<EventResponse> UpdateEvent(ulong id, [FromBody] UpdateEventRequest value) =>
-        repository.UpdateEvent(id, value, await AuthService.GetUidFromRequestAsync(Request));
+        await repository.UpdateEvent(id, value, ((UserRecordFix)HttpContext.Items["User"]!).Uid);
 
     [HttpDelete("{id}")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
-    public EventResponse DeleteEvent(ulong id) => repository.DeleteEvent(id);
+    public async Task<EventResponse> DeleteEvent(ulong id) => await repository.DeleteEvent(id);
 
     [HttpGet("{id}/guests")]
     [AdminAuthorizationFilter(AdminRole.GuestManager)]

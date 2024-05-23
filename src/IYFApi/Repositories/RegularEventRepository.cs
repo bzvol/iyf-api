@@ -1,4 +1,5 @@
-﻿using IYFApi.Models;
+﻿using FirebaseAdmin.Auth;
+using IYFApi.Models;
 using IYFApi.Models.Request;
 using IYFApi.Models.Response;
 using IYFApi.Repositories.Interfaces;
@@ -11,8 +12,8 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
         .Where(@event => @event.Status == Status.Published)
         .ToList().Select(ConvertToEventResponse);
 
-    public IEnumerable<RegularEventAuthorizedResponse> GetAllEventsAuthorized() => context.RegularEvents
-        .ToList().Select(ConvertToEventAuthorizedResponse);
+    public async Task<IEnumerable<RegularEventAuthorizedResponse>> GetAllEventsAuthorized() => await Task.WhenAll(
+        context.RegularEvents.ToList().Select(ConvertToEventAuthorizedResponse));
     
     public RegularEventResponse GetEvent(ulong id)
     {
@@ -22,14 +23,14 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
         return ConvertToEventResponse(@event);
     }
     
-    public RegularEventAuthorizedResponse GetEventAuthorized(ulong id)
+    public async Task<RegularEventAuthorizedResponse> GetEventAuthorized(ulong id)
     {
-        var @event = context.RegularEvents.Find(id) ??
+        var @event = await context.RegularEvents.FindAsync(id) ??
                      throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(id));
-        return ConvertToEventAuthorizedResponse(@event);
+        return await ConvertToEventAuthorizedResponse(@event);
     }
 
-    public RegularEventResponse CreateEvent(CreateEventRequest value, string userId)
+    public async Task<RegularEventResponse> CreateEvent(CreateEventRequest value, string userId)
     {
         var eventEntry = context.RegularEvents.Add(new RegularEvent
         {
@@ -37,15 +38,16 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
             Details = value.Details,
             Time = value.Time!,
             Location = value.Location,
-            CreatedBy = userId
+            CreatedBy = userId,
+            UpdatedBy = userId
         });
-        context.SaveChanges();
-        return ConvertToEventAuthorizedResponse(eventEntry.Entity);
+        await context.SaveChangesAsync();
+        return await ConvertToEventAuthorizedResponse(eventEntry.Entity);
     }
 
-    public RegularEventResponse UpdateEvent(ulong id, UpdateEventRequest value, string userId)
+    public async Task<RegularEventResponse> UpdateEvent(ulong id, UpdateEventRequest value, string userId)
     {
-        var @event = context.RegularEvents.Find(id);
+        var @event = await context.RegularEvents.FindAsync(id);
         if (@event == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(id));
 
         @event.Title = value.Title;
@@ -56,22 +58,22 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
         @event.UpdatedBy = userId;
 
         var updatedEvent = context.RegularEvents.Update(@event);
-        context.SaveChanges();
+        await context.SaveChangesAsync();
 
-        return ConvertToEventAuthorizedResponse(updatedEvent.Entity);
+        return await ConvertToEventAuthorizedResponse(updatedEvent.Entity);
     }
 
-    public RegularEventResponse DeleteEvent(ulong id)
+    public async Task<RegularEventResponse> DeleteEvent(ulong id)
     {
-        var @event = context.RegularEvents.Find(id);
+        var @event = await context.RegularEvents.FindAsync(id);
         if (@event == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(id));
 
         if (@event.Status != Status.Draft)
             throw new InvalidOperationException("You may only delete draft events.");
 
         var deletedEvent = context.RegularEvents.Remove(@event);
-        context.SaveChanges();
-        return ConvertToEventAuthorizedResponse(deletedEvent.Entity);
+        await context.SaveChangesAsync();
+        return await ConvertToEventAuthorizedResponse(deletedEvent.Entity);
     }
 
     private static RegularEventResponse ConvertToEventResponse(RegularEvent @event) => new()
@@ -86,7 +88,7 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
         }
     };
     
-    private static RegularEventAuthorizedResponse ConvertToEventAuthorizedResponse(RegularEvent @event) => new()
+    private static async Task<RegularEventAuthorizedResponse> ConvertToEventAuthorizedResponse(RegularEvent @event) => new()
     {
         Id = @event.Id,
         Title = @event.Title,
@@ -100,9 +102,9 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
         Metadata = new ObjectMetadata
         {
             CreatedAt = @event.CreatedAt,
-            CreatedBy = @event.CreatedBy,
+            CreatedBy = await FirebaseAuth.DefaultInstance.GetUserAsync(@event.CreatedBy),
             UpdatedAt = @event.UpdatedAt,
-            UpdatedBy = @event.UpdatedBy
+            UpdatedBy = await FirebaseAuth.DefaultInstance.GetUserAsync(@event.UpdatedBy)
         }
     };
 }

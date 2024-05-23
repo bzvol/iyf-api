@@ -1,4 +1,5 @@
-﻿using IYFApi.Models;
+﻿using FirebaseAdmin.Auth;
+using IYFApi.Models;
 using IYFApi.Models.Request;
 using IYFApi.Models.Response;
 using IYFApi.Repositories.Interfaces;
@@ -10,9 +11,9 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
     public IEnumerable<EventResponse> GetAllEvents() => context.Events
         .Where(@event => @event.Status == Status.Published)
         .ToList().Select(ConvertToEventResponse);
-    
-    public IEnumerable<EventAuthorizedResponse> GetAllEventsAuthorized() => context.Events
-        .ToList().Select(ConvertToEventAuthorizedResponse);
+
+    public async Task<IEnumerable<EventAuthorizedResponse>> GetAllEventsAuthorized() => await Task.WhenAll(
+        context.Events.ToList().Select(ConvertToEventAuthorizedResponse));
 
     public EventResponse GetEvent(ulong id)
     {
@@ -20,14 +21,14 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
         if (@event.Status != Status.Published) throw new KeyNotFoundException(NoEventFoundMessage(id));
         return ConvertToEventResponse(@event);
     }
-    
-    public EventAuthorizedResponse GetEventAuthorized(ulong id)
+
+    public async Task<EventAuthorizedResponse> GetEventAuthorized(ulong id)
     {
-        var @event = context.Events.Find(id) ?? throw new KeyNotFoundException(NoEventFoundMessage(id));
-        return ConvertToEventAuthorizedResponse(@event);
+        var @event = await context.Events.FindAsync(id) ?? throw new KeyNotFoundException(NoEventFoundMessage(id));
+        return await ConvertToEventAuthorizedResponse(@event);
     }
 
-    public EventResponse CreateEvent(CreateEventRequest value, string userId)
+    public async Task<EventResponse> CreateEvent(CreateEventRequest value, string userId)
     {
         var eventEntry = context.Events.Add(new Event
         {
@@ -36,15 +37,16 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
             StartTime = value.StartTime,
             EndTime = value.EndTime,
             Location = value.Location,
-            CreatedBy = userId
+            CreatedBy = userId,
+            UpdatedBy = userId
         });
-        context.SaveChanges();
-        return ConvertToEventAuthorizedResponse(eventEntry.Entity);
+        await context.SaveChangesAsync();
+        return await ConvertToEventAuthorizedResponse(eventEntry.Entity);
     }
 
-    public EventResponse UpdateEvent(ulong id, UpdateEventRequest value, string userId)
+    public async Task<EventResponse> UpdateEvent(ulong id, UpdateEventRequest value, string userId)
     {
-        var @event = context.Events.Find(id);
+        var @event = await context.Events.FindAsync(id);
         if (@event == null) throw new KeyNotFoundException(NoEventFoundMessage(id));
 
         @event.Title = value.Title;
@@ -54,29 +56,29 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
         @event.EndTime = value.EndTime;
         @event.Location = value.Location;
         @event.UpdatedBy = userId;
-        
+
         if (@event.Status != Status.Published && value.Status == Status.Published)
             @event.PublishedAt = DateTime.UtcNow;
         else if (@event.Status == Status.Published && value.Status != Status.Published)
             @event.PublishedAt = null;
 
         var updatedEvent = context.Events.Update(@event);
-        context.SaveChanges();
+        await context.SaveChangesAsync();
 
-        return ConvertToEventAuthorizedResponse(updatedEvent.Entity);
+        return await ConvertToEventAuthorizedResponse(updatedEvent.Entity);
     }
 
-    public EventResponse DeleteEvent(ulong id)
+    public async Task<EventResponse> DeleteEvent(ulong id)
     {
-        var @event = context.Events.Find(id);
+        var @event = await context.Events.FindAsync(id);
         if (@event == null) throw new KeyNotFoundException(NoEventFoundMessage(id));
 
         if (@event.Status != Status.Draft)
             throw new InvalidOperationException("You may only delete draft events.");
 
         var deletedEvent = context.Events.Remove(@event);
-        context.SaveChanges();
-        return ConvertToEventAuthorizedResponse(deletedEvent.Entity);
+        await context.SaveChangesAsync();
+        return await ConvertToEventAuthorizedResponse(deletedEvent.Entity);
     }
 
     private static EventResponse ConvertToEventResponse(Event @event) => new()
@@ -92,8 +94,8 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
         },
         PublishedAt = @event.PublishedAt
     };
-    
-    private static EventAuthorizedResponse ConvertToEventAuthorizedResponse(Event @event) => new()
+
+    private static async Task<EventAuthorizedResponse> ConvertToEventAuthorizedResponse(Event @event) => new()
     {
         Id = @event.Id,
         Title = @event.Title,
@@ -109,9 +111,9 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
         Metadata = new ObjectMetadata
         {
             CreatedAt = @event.CreatedAt,
-            CreatedBy = @event.CreatedBy,
+            CreatedBy = await FirebaseAuth.DefaultInstance.GetUserAsync(@event.CreatedBy),
             UpdatedAt = @event.UpdatedAt,
-            UpdatedBy = @event.UpdatedBy
+            UpdatedBy = await FirebaseAuth.DefaultInstance.GetUserAsync(@event.UpdatedBy)
         }
     };
 

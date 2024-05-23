@@ -1,25 +1,24 @@
 ﻿using System.Reflection;
-using System.Security.Authentication;
 using FirebaseAdmin.Auth;
 using IYFApi.Models;
 using IYFApi.Models.Request;
 using IYFApi.Services.Interfaces;
-using Microsoft.Extensions.Primitives;
 using MimeKit;
+using UserRecord = FirebaseAdmin.Auth.UserRecord;
 
 namespace IYFApi.Services;
 
 public class AuthService(IMailService mailService) : IAuthService
 {
-    public async Task<IEnumerable<UserRecord>> GetAllUsersAsync()
+    public async Task<IEnumerable<UserRecordFix>> GetAllUsersAsync()
     {
         var userRecords = FirebaseAuth.DefaultInstance.ListUsersAsync(null);
         var users = new List<UserRecord>();
         await foreach (var userRecord in userRecords) users.Add(userRecord);
-        return users;
+        return UserRecordFix.FromIEnumerable(users);
     }
 
-    public async Task<UserRecord> GetUserAsync(string uid) => await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
+    public async Task<UserRecordFix> GetUserAsync(string uid) => await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
 
     public async Task SetDefaultCustomClaimsAsync(string uid)
     {
@@ -181,7 +180,7 @@ public class AuthService(IMailService mailService) : IAuthService
     private static string LoadRolesUpdatedEmailTemplate(string name, Dictionary<AdminRole, bool> roleUpdates)
     {
         var template = LoadEmailTemplate(ResourceNames.RolesUpdated);
-        
+
         var listItems = roleUpdates.Select(pair =>
         {
             var roleDisplayName = pair.Key switch
@@ -193,21 +192,10 @@ public class AuthService(IMailService mailService) : IAuthService
             };
             return $"<li>You were {(pair.Value ? "granted" : "revoked")} the {roleDisplayName} role</li>\n";
         });
-        
+
         return template
             .Replace("{{name}}", name)
             .Replace("{{roleUpdates}}", string.Join("", listItems.ToArray()));
-    }
-
-    public static async Task<string> GetUidFromRequestAsync(HttpRequest request)
-    {
-        var authHeader = request.Headers.TryGetValue("Authorization", out var bearer);
-        if (!authHeader || bearer == StringValues.Empty)
-            throw new AuthenticationException("No authorization header found");
-
-        var token = bearer.ToString().Split(" ")[1];
-        var decodedToken = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(token);
-        return decodedToken.Uid;
     }
 
     private class UserRoleClaims

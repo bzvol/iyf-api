@@ -1,4 +1,5 @@
-﻿using IYFApi.Models;
+﻿using FirebaseAdmin.Auth;
+using IYFApi.Models;
 using IYFApi.Models.Request;
 using IYFApi.Models.Response;
 using IYFApi.Repositories.Interfaces;
@@ -11,8 +12,8 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
             .Where(post => post.Status == Status.Published)
             .ToList().Select(ConvertToPostResponse);
 
-    public IEnumerable<PostAuthorizedResponse> GetAllPostsAuthorized() => context.Posts
-        .ToList().Select(ConvertToPostAuthorizedResponse);
+    public async Task<IEnumerable<PostAuthorizedResponse>> GetAllPostsAuthorized() => await Task.WhenAll( 
+        context.Posts.ToList().Select(ConvertToPostAuthorizedResponse));
 
     public PostResponse GetPost(ulong id)
     {
@@ -21,30 +22,31 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
         return ConvertToPostResponse(post);
     }
 
-    public PostAuthorizedResponse GetPostAuthorized(ulong id)
+    public async Task<PostAuthorizedResponse> GetPostAuthorized(ulong id)
     {
-        var post = context.Posts.Find(id) ?? throw new KeyNotFoundException(NoPostFoundMessage(id));
-        return ConvertToPostAuthorizedResponse(post);
+        var post = await context.Posts.FindAsync(id) ?? throw new KeyNotFoundException(NoPostFoundMessage(id));
+        return await ConvertToPostAuthorizedResponse(post);
     }
 
-    public PostResponse CreatePost(CreatePostRequest value, string userId)
+    public async Task<PostResponse> CreatePost(CreatePostRequest value, string userId)
     {
         var post = context.Posts.Add(new Post
         {
             Title = value.Title,
             Content = value.Content,
-            CreatedBy = userId
+            CreatedBy = userId,
+            UpdatedBy = userId
         });
-        context.SaveChanges();
+        await context.SaveChangesAsync();
 
         SetTagsForPost(post.Entity.Id, value.Tags);
 
-        return ConvertToPostAuthorizedResponse(post.Entity);
+        return await ConvertToPostAuthorizedResponse(post.Entity);
     }
 
-    public PostResponse UpdatePost(ulong id, UpdatePostRequest value, string userId)
+    public async Task<PostResponse> UpdatePost(ulong id, UpdatePostRequest value, string userId)
     {
-        var post = context.Posts.Find(id) ?? throw new KeyNotFoundException(NoPostFoundMessage(id));
+        var post = await context.Posts.FindAsync(id) ?? throw new KeyNotFoundException(NoPostFoundMessage(id));
 
         post.Title = value.Title;
         post.Content = value.Content;
@@ -57,24 +59,24 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
             post.PublishedAt = null;
 
         var updatedPost = context.Posts.Update(post);
-        context.SaveChanges();
+        await context.SaveChangesAsync();
 
         SetTagsForPost(updatedPost.Entity.Id, value.Tags);
 
-        return ConvertToPostAuthorizedResponse(updatedPost.Entity);
+        return await ConvertToPostAuthorizedResponse(updatedPost.Entity);
     }
 
-    public PostResponse DeletePost(ulong id)
+    public async Task<PostResponse> DeletePost(ulong id)
     {
-        var post = context.Posts.Find(id) ?? throw new KeyNotFoundException(NoPostFoundMessage(id));
+        var post = await context.Posts.FindAsync(id) ?? throw new KeyNotFoundException(NoPostFoundMessage(id));
 
         if (post.Status != Status.Draft)
             throw new InvalidOperationException("You may only delete draft posts.");
 
         var deletedPost = context.Posts.Remove(post);
-        context.SaveChanges();
+        await context.SaveChangesAsync();
 
-        return ConvertToPostAuthorizedResponse(deletedPost.Entity);
+        return await ConvertToPostAuthorizedResponse(deletedPost.Entity);
     }
 
     private void SetTagsForPost(ulong id, IEnumerable<string> tags)
@@ -107,7 +109,7 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
         PublishedAt = post.PublishedAt
     };
 
-    private PostAuthorizedResponse ConvertToPostAuthorizedResponse(Post post) => new()
+    private async Task<PostAuthorizedResponse> ConvertToPostAuthorizedResponse(Post post) => new()
     {
         Id = post.Id,
         Title = post.Title,
@@ -120,9 +122,9 @@ public class PostRepository(ApplicationDbContext context) : IPostRepository
         Metadata = new ObjectMetadata
         {
             CreatedAt = post.CreatedAt,
-            CreatedBy = post.CreatedBy,
+            CreatedBy = await FirebaseAuth.DefaultInstance.GetUserAsync(post.CreatedBy),
             UpdatedAt = post.UpdatedAt,
-            UpdatedBy = post.UpdatedBy
+            UpdatedBy = await FirebaseAuth.DefaultInstance.GetUserAsync(post.UpdatedBy),
         }
     };
 

@@ -1,12 +1,13 @@
 ﻿using FirebaseAdmin.Auth;
+using IYFApi.Models;
 using IYFApi.Models.Request;
 
 namespace IYFApi.Services.Interfaces;
 
 public interface IAuthService
 {
-    public Task<IEnumerable<UserRecord>> GetAllUsersAsync();
-    public Task<UserRecord> GetUserAsync(string uid);
+    public Task<IEnumerable<UserRecordFix>> GetAllUsersAsync();
+    public Task<UserRecordFix> GetUserAsync(string uid);
     public Task SetDefaultCustomClaimsAsync(string uid);
     public Task ClearCustomClaimsAsync(string uid);
     public Task RequestAccessAsync(string uid);

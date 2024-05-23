@@ -8,9 +8,9 @@ using Microsoft.Extensions.Primitives;
 namespace IYFApi.Filters;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-public class AdminAuthorizationFilterAttribute(AdminRole role = AdminRole.Admin) : Attribute, IAuthorizationFilter
+public class AdminAuthorizationFilterAttribute(AdminRole role = AdminRole.Admin) : Attribute, IAsyncAuthorizationFilter
 {
-    public async void OnAuthorization(AuthorizationFilterContext context)
+    public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
         var authHeader = context.HttpContext.Request.Headers
             .TryGetValue("Authorization", out var bearer);
@@ -32,6 +32,9 @@ public class AdminAuthorizationFilterAttribute(AdminRole role = AdminRole.Admin)
             context.Result = UnauthorizedResult("Failed to verify token");
             return;
         }
+        
+        var userRecord = await FirebaseAuth.DefaultInstance.GetUserAsync(decodedToken.Uid);
+        context.HttpContext.Items["User"] = new UserRecordFix(userRecord);
 
         var authorized = (bool)decodedToken.Claims[GetRoleString(role)];
         if (!authorized) context.Result = UnauthorizedResult($"Missing required role: {role}");

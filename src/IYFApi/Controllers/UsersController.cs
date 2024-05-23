@@ -12,11 +12,11 @@ public class UsersController(IAuthService authService) : ControllerBase
 {
     [HttpGet]
     [AdminAuthorizationFilter]
-    public async Task<IEnumerable<UserRecord>> GetAllUsers() => await authService.GetAllUsersAsync();
+    public async Task<IEnumerable<UserRecordFix>> GetAllUsers() => await authService.GetAllUsersAsync();
     
     [HttpGet("{uid}")]
     [AdminAuthorizationFilter]
-    public async Task<UserRecord> GetUser(string uid) => await authService.GetUserAsync(uid);
+    public async Task<UserRecordFix> GetUser(string uid) => await authService.GetUserAsync(uid);
     
     [HttpPost("{uid}/set-default-claims")]
     public async Task SetDefaultClaims(string uid) => await authService.SetDefaultCustomClaimsAsync(uid);
