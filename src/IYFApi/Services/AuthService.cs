@@ -83,7 +83,7 @@ public class AuthService(IMailService mailService) : IAuthService
             throw new InvalidOperationException("The requested user was already given access");
 
         await SetCustomUserClaimsKeepExisting(user,
-            new UserRoleClaims { AccessRequested = false, AccessDenied = true, Admin = grant },
+            new UserRoleClaims { AccessRequested = false, AccessDenied = !grant, Admin = grant },
             UserRoleClaims.OverrideMode.Override);
 
         if (!user.EmailVerified) return;
