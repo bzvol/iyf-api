@@ -28,7 +28,7 @@ public class EventsController(IEventRepository repository, IGuestRepository gues
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
     public async Task<IActionResult> CreateEvent([FromBody] CreateEventRequest value)
     {
-        var @event = repository.CreateEvent(value, ((UserRecordFix)HttpContext.Items["User"]!).Uid);
+        var @event = await repository.CreateEvent(value, ((UserRecordFix)HttpContext.Items["User"]!).Uid);
         return CreatedAtAction(nameof(GetEvent), new { id = @event.Id }, @event);
     }
 
