@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using Amazon;
+using Amazon.S3;
 using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
 using FirebaseAdmin;
@@ -63,6 +64,14 @@ public class Startup
         services.AddSingleton<IDonationService, DonationService>();
         services.AddSingleton<IAuthService, AuthService>();
         services.AddSingleton<IMailService, MailService>();
+
+        services.AddSingleton<IAmazonS3>(sp =>
+        {
+            var config = new AmazonS3Config
+                { RegionEndpoint = RegionEndpoint.GetBySystemName("eu-central-1") };
+            return new AmazonS3Client(config);
+        });
+        services.AddSingleton<IImageService, ImageService>();
     }
 
     private static GoogleCredential LoadFirebaseCredentials()
