@@ -13,5 +13,6 @@ public interface IAuthService
     public Task RequestAccessAsync(string uid);
     public Task GrantAccessAsync(string uid, bool grant);
     public Task RevokeAccessAsync(string uid, bool notifyUser);
+    public Task ResetAccessAsync(string uid);
     public Task UpdateRolesAsync(string uid, UpdateRolesRequest request);
 }

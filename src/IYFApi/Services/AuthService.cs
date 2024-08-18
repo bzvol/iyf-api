@@ -112,6 +112,26 @@ public class AuthService(IMailService mailService) : IAuthService
         mailService.SendEmail([recipient], "Access revoked", template);
     }
 
+    // For denied users only
+    public async Task ResetAccessAsync(string uid)
+    {
+        var user = await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
+
+        if (!user.CustomClaims.TryGetValue("accessDenied", out var accessDenied) || !(bool)accessDenied)
+            throw new InvalidOperationException("The requested user wasn't yet denied access");
+
+        var isAdminByDefault = user.Email != null && user.Email.EndsWith("@iyf.hu") && user.EmailVerified;
+        await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(uid, new UserRoleClaims
+        {
+            AccessRequested = false,
+            AccessDenied = false,
+            Admin = isAdminByDefault,
+            ContentManager = false,
+            GuestManager = false,
+            AccessManager = false
+        }.ToObjDictionary());
+    }
+
     public async Task UpdateRolesAsync(string uid, UpdateRolesRequest value)
     {
         var user = await FirebaseAuth.DefaultInstance.GetUserAsync(uid);

@@ -38,6 +38,10 @@ public class UsersController(IAuthService authService) : ControllerBase
     public async Task RevokeAccess(string uid, [FromBody] RevokeAccessRequest body) =>
         await authService.RevokeAccessAsync(uid, body.NotifyUser);
     
+    [HttpPost("{uid}/reset-access")]
+    [AdminAuthorizationFilter(AdminRole.AccessManager)]
+    public async Task ResetAccess(string uid) => await authService.ResetAccessAsync(uid);
+    
     [HttpPut("{uid}/update-roles")]
     [AdminAuthorizationFilter(AdminRole.AccessManager)]
     public async Task UpdateRoles(string uid, [FromBody] UpdateRolesRequest value) =>
