@@ -34,9 +34,9 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
         {
             Title = value.Title,
             Details = value.Details,
-            StartTime = value.StartTime,
-            EndTime = value.EndTime,
-            Location = value.Location,
+            StartTime = value.Schedule.StartTime,
+            EndTime = value.Schedule.EndTime,
+            Location = value.Schedule.Location,
             CreatedBy = userId,
             UpdatedBy = userId
         });
@@ -52,9 +52,9 @@ public class EventRepository(ApplicationDbContext context) : IEventRepository
         @event.Title = value.Title;
         @event.Details = value.Details;
         @event.Status = value.Status;
-        @event.StartTime = value.StartTime;
-        @event.EndTime = value.EndTime;
-        @event.Location = value.Location;
+        @event.StartTime = value.Schedule.StartTime;
+        @event.EndTime = value.Schedule.EndTime;
+        @event.Location = value.Schedule.Location;
         @event.UpdatedBy = userId;
 
         if (@event.Status != Status.Published && value.Status == Status.Published)

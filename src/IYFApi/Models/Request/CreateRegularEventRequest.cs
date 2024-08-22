@@ -1,10 +1,10 @@
-﻿using IYFApi.Models.Response;
+using IYFApi.Models.Response;
 
 namespace IYFApi.Models.Request;
 
-public class CreateEventRequest
+public class CreateRegularEventRequest
 {
     public string Title { get; init; } = null!;
     public string Details { get; init; } = null!;
-    public EventSchedule Schedule { get; init; } = null!;
+    public RegularEventSchedule Schedule { get; init; } = null!;
 }

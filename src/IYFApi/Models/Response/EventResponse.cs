@@ -19,5 +19,5 @@ public class EventSchedule
 {
     public DateTime? StartTime { get; init; }
     public DateTime? EndTime { get; init; }
-    public string? Location { get; init; } = null!;
+    public string? Location { get; init; }
 }

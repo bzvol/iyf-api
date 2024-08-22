@@ -25,7 +25,7 @@ public class RegularEventsController(IRegularEventRepository repository) : Contr
 
     [HttpPost]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
-    public async Task<IActionResult> CreateEvent([FromBody] CreateEventRequest value)
+    public async Task<IActionResult> CreateEvent([FromBody] CreateRegularEventRequest value)
     {
         var @event = await repository.CreateEvent(value, ((UserRecordFix)HttpContext.Items["User"]!).Uid);
         return CreatedAtAction(nameof(GetEvent), new { id = @event.Id }, @event);
@@ -33,7 +33,7 @@ public class RegularEventsController(IRegularEventRepository repository) : Contr
 
     [HttpPut("{id}")]
     [AdminAuthorizationFilter(AdminRole.ContentManager)]
-    public async Task<RegularEventResponse> UpdateEvent(ulong id, [FromBody] UpdateEventRequest value) =>
+    public async Task<RegularEventResponse> UpdateEvent(ulong id, [FromBody] UpdateRegularEventRequest value) =>
         await repository.UpdateEvent(id, value, ((UserRecordFix)HttpContext.Items["User"]!).Uid);
 
     [HttpDelete("{id}")]

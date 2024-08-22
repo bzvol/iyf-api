@@ -10,7 +10,7 @@ public interface IRegularEventRepository
     public Task<IEnumerable<RegularEventAuthorizedResponse>> GetAllEventsAuthorized();
     public RegularEventResponse GetEvent(ulong id);
     public Task<RegularEventAuthorizedResponse> GetEventAuthorized(ulong id);
-    public Task<RegularEventResponse> CreateEvent(CreateEventRequest value, string userId);
-    public Task<RegularEventResponse> UpdateEvent(ulong id, UpdateEventRequest value, string userId);
+    public Task<RegularEventResponse> CreateEvent(CreateRegularEventRequest value, string userId);
+    public Task<RegularEventResponse> UpdateEvent(ulong id, UpdateRegularEventRequest value, string userId);
     public Task<RegularEventResponse> DeleteEvent(ulong id);
 }

@@ -30,14 +30,14 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
         return await ConvertToEventAuthorizedResponse(@event);
     }
 
-    public async Task<RegularEventResponse> CreateEvent(CreateEventRequest value, string userId)
+    public async Task<RegularEventResponse> CreateEvent(CreateRegularEventRequest value, string userId)
     {
         var eventEntry = context.RegularEvents.Add(new RegularEvent
         {
             Title = value.Title,
             Details = value.Details,
-            Time = value.Time!,
-            Location = value.Location,
+            Time = value.Schedule.Time,
+            Location = value.Schedule.Location,
             CreatedBy = userId,
             UpdatedBy = userId
         });
@@ -45,7 +45,7 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
         return await ConvertToEventAuthorizedResponse(eventEntry.Entity);
     }
 
-    public async Task<RegularEventResponse> UpdateEvent(ulong id, UpdateEventRequest value, string userId)
+    public async Task<RegularEventResponse> UpdateEvent(ulong id, UpdateRegularEventRequest value, string userId)
     {
         var @event = await context.RegularEvents.FindAsync(id);
         if (@event == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(id));
@@ -53,8 +53,8 @@ public class RegularEventRepository(ApplicationDbContext context) : IRegularEven
         @event.Title = value.Title;
         @event.Details = value.Details;
         @event.Status = value.Status;
-        @event.Time = value.Time;
-        @event.Location = value.Location;
+        @event.Time = value.Schedule.Time;
+        @event.Location = value.Schedule.Location;
         @event.UpdatedBy = userId;
 
         var updatedEvent = context.RegularEvents.Update(@event);
