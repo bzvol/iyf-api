@@ -30,17 +30,17 @@ public class Event
     public string? Location { get; set; }
 
     [Column("status", TypeName = "enum('draft','published','archived')")]
-    public Status Status { get; set; } = Status.Draft;
+    public Status Status { get; set; }
 
     [Column("created_at", TypeName = "timestamp")]
-    public DateTime CreatedAt { get; init; } = DateTime.Now;
+    public DateTime CreatedAt { get; init; }
     
     [Column("created_by")]
     [StringLength(255)]
     public string CreatedBy { get; init; } = null!;
 
     [Column("updated_at", TypeName = "timestamp")]
-    public DateTime UpdatedAt { get; init; } = DateTime.Now;
+    public DateTime UpdatedAt { get; init; }
     
     [Column("updated_by")]
     [StringLength(255)]

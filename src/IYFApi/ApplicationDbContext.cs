@@ -32,7 +32,7 @@ public class ApplicationDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseMySql(
-            GetConnectionString(),
+            GetConnectionString() + "Convert Zero Datetime=true;",
             ServerVersion.Parse("8.0.35-mysql"));
     
     private static string GetConnectionString() =>
@@ -53,7 +53,9 @@ public class ApplicationDbContext : DbContext
                 .HasConversion<StatusConverter>()
                 .HasDefaultValueSql("'draft'");
 
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.CreatedAt)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.UpdatedAt)
                 .ValueGeneratedOnAddOrUpdate()
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -76,7 +78,9 @@ public class ApplicationDbContext : DbContext
                 .HasConversion<StatusConverter>()
                 .HasDefaultValueSql("'draft'");
 
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.CreatedAt)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.UpdatedAt)
                 .ValueGeneratedOnAddOrUpdate()
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -86,7 +90,9 @@ public class ApplicationDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.CreatedAt)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
         
         modelBuilder.Entity<EventCustomField>(entity =>
@@ -102,20 +108,15 @@ public class ApplicationDbContext : DbContext
                 .HasConversion<StatusConverter>()
                 .HasDefaultValueSql("'draft'");
 
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.CreatedAt)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.UpdatedAt)
                 .ValueGeneratedOnAddOrUpdate()
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
     }
 
-    private class StatusConverter : ValueConverter<Status, string>
-    {
-        public StatusConverter()
-            : base(
-                v => v.ToString().ToLowerInvariant(),
-                v => (Status)Enum.Parse(typeof(Status), v, true))
-        {
-        }
-    }
+    private class StatusConverter() : ValueConverter<Status, string>(v => v.ToString().ToLowerInvariant(),
+        v => (Status)Enum.Parse(typeof(Status), v, true));
 }
