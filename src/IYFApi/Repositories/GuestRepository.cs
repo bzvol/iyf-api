@@ -14,7 +14,21 @@ public class GuestRepository(ApplicationDbContext context) : IGuestRepository
 
         return from guest in context.EventGuests
             where guest.EventId == eventId
-            select guest;
+            select new GuestResponse
+            {
+                Id = guest.Id,
+                EventId = guest.EventId,
+                Name = guest.Name,
+                Email = guest.Email,
+                Phone = guest.Phone,
+                Age = guest.Age,
+                City = guest.City,
+                Source = guest.Source,
+                Custom = new Dictionary<string, string>((from cf in context.EventCustomFields
+                    where cf.EventId == guest.EventId && cf.GuestId == guest.Id
+                    select new KeyValuePair<string, string>(cf.FieldName, cf.FieldValue)).ToList()),
+                CreatedAt = guest.CreatedAt
+            };
     }
 
     public GuestResponse CreateGuest(ulong eventId, CreateGuestRequest value)
@@ -106,16 +120,16 @@ public class GuestRepository(ApplicationDbContext context) : IGuestRepository
             Age = updatedGuest.Entity.Age,
             City = updatedGuest.Entity.City,
             Source = updatedGuest.Entity.Source,
-            Custom = new Dictionary<string, string>(from cf in context.EventCustomFields
+            Custom = new Dictionary<string, string>((from cf in context.EventCustomFields
                 where cf.EventId == updatedGuest.Entity.EventId && cf.GuestId == updatedGuest.Entity.Id
-                select new KeyValuePair<string, string>(cf.FieldName, cf.FieldValue)),
+                select new KeyValuePair<string, string>(cf.FieldName, cf.FieldValue)).ToList()),
             CreatedAt = updatedGuest.Entity.CreatedAt
         };
 
         return response;
     }
 
-    public EventGuest? DeleteGuest(ulong guestId)
+    public EventGuest DeleteGuest(ulong guestId)
     {
         var guest = context.EventGuests.Find(guestId);
         if (guest == null) throw new KeyNotFoundException(NoGuestFoundMessage(guestId));
