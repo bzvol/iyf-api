@@ -91,7 +91,7 @@ public class AuthService(IMailService mailService) : IAuthService
         var recipient = new MailboxAddress(user.DisplayName, user.Email);
         var template = LoadEmailTemplate(grant ? ResourceNames.AccessGranted : ResourceNames.AccessDenied,
             new Dictionary<string, string> { { "name", user.DisplayName } });
-        mailService.SendEmail([recipient], "Access granted", template);
+        mailService.SendEmail([recipient], grant ? "Access granted" : "Access denied", template);
     }
 
     public async Task RevokeAccessAsync(string uid, bool notifyUser)
