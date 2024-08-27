@@ -2,12 +2,15 @@
 using IYFApi.Models.Request;
 using IYFApi.Models.Response;
 using IYFApi.Repositories.Interfaces;
+using OfficeOpenXml;
 
 namespace IYFApi.Repositories;
 
 public class GuestRepository(ApplicationDbContext context) : IGuestRepository
 {
-    public IEnumerable<EventGuest> GetGuestsForEvent(ulong eventId)
+    private const string ExcelContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    
+    public IEnumerable<GuestResponse> GetGuestsForEvent(ulong eventId)
     {
         var @event = context.Events.Find(eventId);
         if (@event == null) throw new KeyNotFoundException(EventRepository.NoEventFoundMessage(eventId));
@@ -138,6 +141,49 @@ public class GuestRepository(ApplicationDbContext context) : IGuestRepository
         context.SaveChanges();
 
         return deletedGuest.Entity;
+    }
+
+    public (MemoryStream, string, string) ExportGuests(ulong eventId)
+    {
+        var guests = GetGuestsForEvent(eventId).ToList();
+        
+        if (guests.Count == 0)
+            throw new InvalidOperationException("No guests found for the specified event.");
+        
+        var fields = typeof(EventGuest).GetProperties().Select(p => p.Name).ToList();
+        fields.Remove("EventId");
+        fields.Remove("CreatedAt");
+        fields.Remove("Custom");
+        var customFields = guests.SelectMany(g => g.Custom.Keys).Distinct().ToList();
+        
+        using var package = new ExcelPackage();
+        var worksheet = package.Workbook.Worksheets.Add("Guests");
+        
+        for (var i = 0; i < fields.Count; i++)
+            worksheet.Cells[1, i + 1].Value = fields[i];
+        for (var i = 0; i < customFields.Count; i++)
+            worksheet.Cells[1, fields.Count + i + 1].Value = customFields[i];
+        worksheet.Cells[1, 1, 1, fields.Count + customFields.Count].Style.Font.Bold = true;
+
+        for (var i = 0; i < guests.Count; i++)
+        {
+            var guest = guests[i];
+            for (var j = 0; j < fields.Count; j++)
+                worksheet.Cells[i + 2, j + 1].Value = typeof(GuestResponse).GetProperty(fields[j])?.GetValue(guest) ?? "";
+            for (var j = 0; j < customFields.Count; j++)
+                worksheet.Cells[i + 2, fields.Count + j + 1].Value = guest.Custom.GetValueOrDefault(customFields[j], "");
+        }
+        
+        worksheet.Cells.AutoFitColumns();
+
+        var stream = new MemoryStream();
+        package.SaveAs(stream);
+        stream.Position = 0;
+
+        var @event = context.Events.Find(eventId)!;
+        var fileName = $"{@event.Title} - Guests.xlsx";
+        
+        return (stream, fileName, ExcelContentType);
     }
 
     private static string NoGuestFoundMessage(ulong? id) =>

@@ -43,7 +43,7 @@ public class EventsController(IEventRepository repository, IGuestRepository gues
 
     [HttpGet("{id}/guests")]
     [AdminAuthorizationFilter(AdminRole.GuestManager)]
-    public IEnumerable<EventGuest> GetGuestsForEvent(ulong id) => guestRepository.GetGuestsForEvent(id);
+    public IEnumerable<GuestResponse> GetGuestsForEvent(ulong id) => guestRepository.GetGuestsForEvent(id);
 
     [HttpPost("{id}/guests")]
     // Creating a guest will be done by the guest itself,
@@ -62,4 +62,12 @@ public class EventsController(IEventRepository repository, IGuestRepository gues
     [HttpDelete("{id}/guests/{guestId}")]
     [AdminAuthorizationFilter(AdminRole.GuestManager)]
     public EventGuest? DeleteGuest(ulong guestId) => guestRepository.DeleteGuest(guestId);
+
+    [HttpGet("{id}/guests/export")]
+    [AdminAuthorizationFilter(AdminRole.GuestManager)]
+    public FileStreamResult ExportGuests(ulong id)
+    {
+        var (stream, fileName, contentType) = guestRepository.ExportGuests(id);
+        return File(stream, contentType, fileName);
+    }
 }
