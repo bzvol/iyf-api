@@ -14,23 +14,24 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Amazon.Lambda.AspNetCoreServer" Version="8.1.1"/>
-        <PackageReference Include="AWSSDK.S3" Version="3.7.401.1" />
-        <PackageReference Include="AWSSDK.SecretsManager" Version="3.7.400.7" />
+        <PackageReference Include="AWSSDK.S3" Version="3.7.401.1"/>
+        <PackageReference Include="AWSSDK.SecretsManager" Version="3.7.400.7"/>
         <PackageReference Include="FirebaseAdmin" Version="2.4.0"/>
-        <PackageReference Include="MailKit" Version="4.3.0" />
+        <PackageReference Include="MailKit" Version="4.3.0"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.8" />
-        <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.8"/>
+        <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2"/>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0"/>
     </ItemGroup>
     <ItemGroup>
-      <EmbeddedResource Include="Resources\AccessRequestEmailTemplate.html" />
-      <EmbeddedResource Include="Resources\AccessGrantedEmailTemplate.html" />
-      <EmbeddedResource Include="Resources\AccessDeniedEmailTemplate.html" />
-      <EmbeddedResource Include="Resources\AccessRevokedEmailTemplate.html" />
-      <EmbeddedResource Include="Resources\RolesUpdatedEmailTemplate.html" />
+        <EmbeddedResource Include="Resources\AccessRequestEmailTemplate.html"/>
+        <EmbeddedResource Include="Resources\AccessGrantedEmailTemplate.html"/>
+        <EmbeddedResource Include="Resources\AccessDeniedEmailTemplate.html"/>
+        <EmbeddedResource Include="Resources\AccessRevokedEmailTemplate.html"/>
+        <EmbeddedResource Include="Resources\RolesUpdatedEmailTemplate.html"/>
+        <EmbeddedResource Include="Resources\BugReportEmailTemplate.html"/>
     </ItemGroup>
 </Project>
